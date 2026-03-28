@@ -27,7 +27,7 @@ export async function GET(request) {
     .select(
       `id, shop_id, line_user_id, display_name, memo, tags,
        last_visited_at, visit_count, notify_days_override,
-       shops ( id, name, line_channel_access_token, default_notify_days )`
+       shops ( id, name, line_channel_access_token, default_notify_days, master_prompt, coupon_text )`
     )
     .eq('is_active', true)
     .not('line_user_id', 'is', null)
@@ -106,8 +106,14 @@ async function generateMessage(customer, shop) {
     { year: 'numeric', month: 'long', day: 'numeric' }
   )
 
+  const persona = shop?.master_prompt
+    ? `あなたは以下の特徴を持つ美容サロンのスタッフです。\n${shop.master_prompt}`
+    : `あなたは美容サロンのスタッフです。丁寧で温かみのある文体でメッセージを書いてください。`
+
   const lines = [
-    `あなたは美容サロンのスタッフです。以下の顧客情報をもとに、再来店を促す温かみのある短いLINEメッセージを日本語で生成してください。`,
+    `${persona}`,
+    ``,
+    `以下の顧客情報をもとに、再来店を促す短いLINEメッセージを日本語で生成してください。`,
     ``,
     `顧客情報：`,
     `- 名前: ${customer.display_name ?? 'お客様'}`,
@@ -118,10 +124,11 @@ async function generateMessage(customer, shop) {
   if (customer.memo) lines.push(`- メモ: ${customer.memo}`)
   if (customer.tags?.length) lines.push(`- タグ: ${customer.tags.join(', ')}`)
   if (shop?.name) lines.push(``, `店舗名: ${shop.name}`)
+  if (shop?.coupon_text) lines.push(`クーポン: ${shop.coupon_text}`)
 
   lines.push(
     ``,
-    `メッセージは100〜150文字程度で、自然で親しみやすい文体にしてください。メッセージのみを出力し、前置きや説明は不要です。`
+    `メッセージは100〜150文字程度にしてください。メッセージのみを出力し、前置きや説明は不要です。`
   )
 
   const response = await client.messages.create({
