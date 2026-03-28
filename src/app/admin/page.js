@@ -5,7 +5,7 @@ export const revalidate = 0
 export default async function AdminPage() {
   const { data: customers, error } = await supabaseAdmin
     .from('customers')
-    .select('id, name, last_visited_at, visit_count')
+    .select('id, display_name, last_visited_at, visit_count')
     .order('last_visited_at', { ascending: false })
 
   return (
@@ -47,7 +47,7 @@ export default async function AdminPage() {
               <tbody className="divide-y divide-gray-100">
                 {customers.map((customer) => (
                   <tr key={customer.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-gray-800">{customer.name ?? '—'}</td>
+                    <td className="px-6 py-4 text-gray-800">{customer.display_name ?? '—'}</td>
                     <td className="px-6 py-4 text-gray-600">
                       {customer.last_visited_at
                         ? new Date(customer.last_visited_at).toLocaleDateString('ja-JP')
