@@ -39,9 +39,6 @@ export default function ShopSettingsForm({ shop }) {
           placeholder="例：明るく親しみやすい口調で、お客様を下の名前で呼ぶ。絵文字を適度に使う。"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
-        <p className="text-xs text-gray-400 mt-1">
-          設定するとこの内容をもとにAIがメッセージを生成します
-        </p>
       </div>
 
       <div>
@@ -64,7 +61,6 @@ export default function ShopSettingsForm({ shop }) {
           defaultValue={shop.default_notify_days ?? 30}
           className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <p className="text-xs text-gray-400 mt-1">最終来店からこの日数が経過した顧客に通知します</p>
       </div>
 
       <div className="flex items-center gap-4 pt-2">
