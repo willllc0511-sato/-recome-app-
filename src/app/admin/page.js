@@ -22,7 +22,7 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-xl font-semibold text-gray-800">管理画面</h1>
+        <h1 className="text-xl font-semibold text-gray-800">Link 管理画面</h1>
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-10">
