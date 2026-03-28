@@ -15,11 +15,7 @@ export const metadata = {
   title: "Link",
   description: "Link - 顧客管理・再来店促進サービス",
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
-    ],
-    shortcut: '/favicon.svg',
+    icon: '/favicon.ico',
     apple: '/icon.png',
   },
 };
