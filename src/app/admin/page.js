@@ -6,7 +6,7 @@ export const revalidate = 0
 const SHOP_ID = process.env.NEXT_PUBLIC_SHOP_ID
 
 export default async function AdminPage() {
-  const [{ data: shop }, { data: customers, error: customersError }] = await Promise.all([
+  const [{ data: shop, error: shopError }, { data: customers, error: customersError }] = await Promise.all([
     supabaseAdmin
       .from('shops')
       .select('id, name, master_prompt, coupon_text, default_notify_days')
@@ -30,11 +30,19 @@ export default async function AdminPage() {
         {/* お店設定 */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-medium text-gray-700 mb-6">お店設定</h2>
+          {shopError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+              <p className="font-medium">店舗データの取得に失敗しました</p>
+              <p className="mt-1 font-mono">{shopError.message}</p>
+            </div>
+          )}
           {shop ? (
             <ShopSettingsForm shop={shop} />
-          ) : (
-            <p className="text-sm text-red-500">店舗データを取得できませんでした</p>
-          )}
+          ) : !shopError ? (
+            <p className="text-sm text-red-500">
+              SHOP_ID ({SHOP_ID}) に一致する店舗が見つかりません
+            </p>
+          ) : null}
         </section>
 
         {/* 顧客一覧 */}
