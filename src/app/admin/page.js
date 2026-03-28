@@ -6,18 +6,46 @@ export const revalidate = 0
 const SHOP_ID = process.env.NEXT_PUBLIC_SHOP_ID
 
 export default async function AdminPage() {
-  const [{ data: shop, error: shopError }, { data: customers, error: customersError }] = await Promise.all([
-    supabaseAdmin
-      .from('shops')
-      .select('id, name, master_prompt, coupon_text, default_notify_days')
-      .eq('id', SHOP_ID)
-      .single(),
-    supabaseAdmin
-      .from('customers')
-      .select('id, display_name, last_visited_at, visit_count')
-      .eq('shop_id', SHOP_ID)
-      .order('last_visited_at', { ascending: false }),
-  ])
+  let shop = null
+  let shopError = null
+  let customers = []
+  let customersError = null
+  let fatalError = null
+
+  try {
+    const [shopResult, customersResult] = await Promise.all([
+      supabaseAdmin
+        .from('shops')
+        .select('id, name, master_prompt, coupon_text, default_notify_days')
+        .eq('id', SHOP_ID)
+        .single(),
+      supabaseAdmin
+        .from('customers')
+        .select('id, display_name, last_visited_at, visit_count')
+        .eq('shop_id', SHOP_ID)
+        .order('last_visited_at', { ascending: false }),
+    ])
+    shop = shopResult.data
+    shopError = shopResult.error
+    customers = customersResult.data ?? []
+    customersError = customersResult.error
+  } catch (e) {
+    fatalError = e?.message ?? String(e)
+  }
+
+  if (fatalError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-5 rounded-lg max-w-xl w-full">
+          <p className="font-semibold mb-2">管理画面の読み込みに失敗しました</p>
+          <pre className="text-xs whitespace-pre-wrap font-mono">{fatalError}</pre>
+          <p className="text-xs mt-3 text-red-500">
+            SHOP_ID: {SHOP_ID ?? '未設定'} / Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ?? '未設定'}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
