@@ -14,6 +14,14 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Link",
   description: "Link - 顧客管理・再来店促進サービス",
+  icons: {
+    icon: [
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [
+      { url: '/icon.png', sizes: '512x512' },
+    ],
+  },
 };
 
 export default function RootLayout({ children }) {
