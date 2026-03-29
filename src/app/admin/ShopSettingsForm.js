@@ -53,6 +53,18 @@ export default function ShopSettingsForm({ shop }) {
       </div>
 
       <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Googleレビューリンク</label>
+        <input
+          name="google_review_url"
+          type="url"
+          defaultValue={shop.google_review_url ?? ''}
+          placeholder="例：https://g.page/r/xxxxxxxxxxxxxxxx/review"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <p className="mt-1 text-xs text-gray-500">設定するとLINE友だち追加から1時間後に口コミ依頼メッセージを自動送信します</p>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">通知日数（日）</label>
         <input
           name="default_notify_days"
