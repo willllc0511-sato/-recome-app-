@@ -19,10 +19,10 @@ export async function GET(request) {
 
   console.log('[send-review-requests] 開始')
 
-  // 友だち追加から50〜70分の顧客を対象にする（Cron実行タイミングのズレを考慮）
+  // 友だち追加から23〜25時間の顧客を対象にする（毎日3時UTC実行）
   const now = new Date()
-  const from = new Date(now.getTime() - 70 * 60 * 1000).toISOString()
-  const to = new Date(now.getTime() - 50 * 60 * 1000).toISOString()
+  const from = new Date(now.getTime() - 25 * 60 * 60 * 1000).toISOString()
+  const to = new Date(now.getTime() - 23 * 60 * 60 * 1000).toISOString()
 
   // 対象顧客を取得（未送信かつ友だち追加から約1時間経過）
   const { data: customers, error } = await supabaseAdmin
