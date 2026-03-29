@@ -24,7 +24,7 @@ export default function ShopSettingsForm({ shop }) {
         <input
           name="name"
           defaultValue={shop.name ?? ''}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -37,7 +37,7 @@ export default function ShopSettingsForm({ shop }) {
           defaultValue={shop.master_prompt ?? ''}
           rows={4}
           placeholder="例：明るく親しみやすい口調で、お客様を下の名前で呼ぶ。絵文字を適度に使う。"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
       </div>
 
@@ -48,7 +48,7 @@ export default function ShopSettingsForm({ shop }) {
           defaultValue={shop.coupon_text ?? ''}
           rows={3}
           placeholder="例：次回ご来店時、トリートメント無料サービス"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
       </div>
 
@@ -59,7 +59,7 @@ export default function ShopSettingsForm({ shop }) {
           type="url"
           defaultValue={shop.google_review_url ?? ''}
           placeholder="例：https://g.page/r/xxxxxxxxxxxxxxxx/review"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p className="mt-1 text-xs text-gray-500">設定するとLINE友だち追加から1時間後に口コミ依頼メッセージを自動送信します</p>
       </div>
@@ -71,7 +71,7 @@ export default function ShopSettingsForm({ shop }) {
           type="number"
           min={1}
           defaultValue={shop.default_notify_days ?? 30}
-          className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
