@@ -94,6 +94,51 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 口コミ機能 */}
+      <section className="py-10 px-4 bg-blue-900/50">
+        <div className="max-w-4xl mx-auto">
+          <div className="inline-block bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-xs mb-3">
+            ⭐ 口コミ自動化
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">
+            良い口コミだけを、自然に集める
+          </h2>
+          <p className="text-blue-300 text-sm mb-6">
+            無理にお願いするのではなく、満足度の高いお客様にだけ絞って依頼するから、星5レビューが増えやすい。
+          </p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex gap-3">
+              <div className="text-green-400 text-xl flex-shrink-0">✅</div>
+              <div>
+                <div className="text-white font-medium text-sm">来店後に満足度を自動確認</div>
+                <div className="text-blue-300 text-xs mt-0.5">LINEで「今日はいかがでしたか？」と自動でヒアリング</div>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="text-green-400 text-xl flex-shrink-0">✅</div>
+              <div>
+                <div className="text-white font-medium text-sm">満足度が高い方だけに口コミを依頼</div>
+                <div className="text-blue-300 text-xs mt-0.5">Google直リンク付きで自然にレビューへ誘導</div>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="text-green-400 text-xl flex-shrink-0">✅</div>
+              <div>
+                <div className="text-white font-medium text-sm">お店の手間はゼロ</div>
+                <div className="text-blue-300 text-xs mt-0.5">全て自動。オーナーが何かする必要はありません</div>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="text-blue-400 text-xl flex-shrink-0">💬</div>
+              <div>
+                <div className="text-white font-medium text-sm">低評価のお客様には改善点をヒアリング</div>
+                <div className="text-blue-300 text-xs mt-0.5">口コミは頼まず、悩みや不満を直接聞いてフォロー</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 管理画面プレビュー */}
       <section className="py-10 px-4 bg-blue-900/50">
         <div className="max-w-4xl mx-auto text-center">
@@ -142,6 +187,7 @@ export default function LandingPage() {
               <div className="mb-3">
                 <span className="text-2xl font-bold text-white">2</span>
                 <span className="text-blue-300">万円/月</span>
+                <span className="text-blue-400 text-xs ml-1">（税別）</span>
               </div>
               <ul className="space-y-1 text-sm text-blue-200">
                 <li>✓ 再来店メッセージ</li>
@@ -159,6 +205,7 @@ export default function LandingPage() {
               <div className="mb-3">
                 <span className="text-2xl font-bold text-white">5</span>
                 <span className="text-blue-300">万円/月</span>
+                <span className="text-blue-400 text-xs ml-1">（税別）</span>
               </div>
               <ul className="space-y-1 text-sm text-blue-200">
                 <li>✓ ベーシック全機能</li>
@@ -173,6 +220,7 @@ export default function LandingPage() {
               <div className="mb-3">
                 <span className="text-2xl font-bold text-white">7</span>
                 <span className="text-blue-300">万円/月</span>
+                <span className="text-blue-400 text-xs ml-1">（税別）</span>
               </div>
               <ul className="space-y-1 text-sm text-blue-200">
                 <li>✓ スタンダード全機能</li>
@@ -219,17 +267,35 @@ export default function LandingPage() {
           </div>
 
           {/* 紹介割引 */}
-          <div className="bg-green-600/20 rounded-xl p-4 border border-green-500/30">
-            <div className="text-green-300 text-sm mb-1">🤝 紹介割引</div>
-            <div className="text-white font-bold mb-2">お友達紹介でWでお得</div>
+          <div className="bg-green-600/20 rounded-xl p-4 border border-green-500/30 mb-4">
+            <div className="text-green-300 text-sm mb-1">🤝 お店同士の紹介割引</div>
+            <div className="text-white font-bold mb-2">紹介でWでお得</div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="bg-blue-900/50 rounded-lg p-2">
                 <div className="text-green-300 text-xs">紹介された方</div>
-                <div className="text-white font-bold">導入費1万円OFF</div>
+                <div className="text-white font-bold">初期費1万円OFF</div>
               </div>
               <div className="bg-blue-900/50 rounded-lg p-2">
                 <div className="text-green-300 text-xs">紹介した方</div>
                 <div className="text-white font-bold">翌月1万円OFF</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 紹介パートナー制度 */}
+          <div className="bg-yellow-600/20 rounded-xl p-4 border border-yellow-500/30">
+            <div className="text-yellow-300 text-sm mb-1">💛 紹介パートナー制度</div>
+            <div className="text-white font-bold mb-2">紹介コードを発行して報酬を受け取る</div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="bg-blue-900/50 rounded-lg p-2">
+                <div className="text-yellow-300 text-xs">報酬</div>
+                <div className="text-white font-bold">一律5,000円</div>
+                <div className="text-blue-300 text-xs">紹介から2ヶ月目末にお支払い</div>
+              </div>
+              <div className="bg-blue-900/50 rounded-lg p-2">
+                <div className="text-yellow-300 text-xs">参加方法</div>
+                <div className="text-white font-bold">紹介コード発行</div>
+                <div className="text-blue-300 text-xs">お申し込み時にご連絡ください</div>
               </div>
             </div>
           </div>
