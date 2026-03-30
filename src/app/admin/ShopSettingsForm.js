@@ -28,25 +28,8 @@ export default function ShopSettingsForm({ shop }) {
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          オーナーの人柄・口調の説明
-        </label>
-        <input type="hidden" name="master_prompt_current" value={shop.master_prompt ?? ''} />
-        <textarea
-          name="master_prompt"
-          rows={4}
-          placeholder={shop.master_prompt ?? '例：明るく親しみやすい口調で、お客様を下の名前で呼ぶ。絵文字を適度に使う。'}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-        />
-        {shop.master_prompt && (
-          <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
-            <input type="checkbox" name="master_prompt_clear" value="1" className="rounded" />
-            <span className="text-xs text-red-500">現在の設定を削除する</span>
-          </label>
-        )}
-        <p className="mt-1 text-xs text-gray-500">AIがこの内容をもとにオーナーらしい文体でメッセージを作成します</p>
-      </div>
+      {/* master_prompt は非表示（データは保持） */}
+      <input type="hidden" name="master_prompt_current" value={shop.master_prompt ?? ''} />
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">クーポン内容</label>
