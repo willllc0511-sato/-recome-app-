@@ -30,7 +30,7 @@ export default function LandingPage() {
             Link<span className="text-blue-400">.</span>
           </div>
           <a href="#contact" className="bg-blue-500 hover:bg-blue-400 text-white px-4 py-2 rounded-full text-sm font-medium transition">
-            無料相談する
+            お問い合わせ
           </a>
         </div>
       </nav>
@@ -473,18 +473,30 @@ export default function LandingPage() {
                   <td className="py-2 text-white">合同会社Will</td>
                 </tr>
                 <tr className="border-b border-blue-700/50">
-                  <td className="py-2 text-blue-300">所在地</td>
-                  <td className="py-2 text-white">鹿児島県</td>
-                </tr>
-                <tr className="border-b border-blue-700/50">
                   <td className="py-2 text-blue-300">代表</td>
                   <td className="py-2 text-white">高城 智</td>
                 </tr>
-                <tr>
-                  <td className="py-2 text-blue-300">Web</td>
+                <tr className="border-b border-blue-700/50">
+                  <td className="py-2 text-blue-300">所在地</td>
+                  <td className="py-2 text-white">鹿児島県鹿児島市</td>
+                </tr>
+                <tr className="border-b border-blue-700/50">
+                  <td className="py-2 text-blue-300">事業内容</td>
+                  <td className="py-2 text-white">店舗デジタル化支援、通信事業</td>
+                </tr>
+                <tr className="border-b border-blue-700/50">
+                  <td className="py-2 text-blue-300">メール</td>
                   <td className="py-2">
-                    <a href="https://will0511.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                      will0511.com
+                    <a href="mailto:will.llc0511@gmail.com" className="text-blue-400 hover:underline">
+                      will.llc0511@gmail.com
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-2 text-blue-300">電話</td>
+                  <td className="py-2">
+                    <a href="tel:09026640511" className="text-blue-400 hover:underline">
+                      090-2664-0511
                     </a>
                   </td>
                 </tr>
