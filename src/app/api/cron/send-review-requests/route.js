@@ -29,7 +29,7 @@ export async function GET(request) {
     .from('customers')
     .select(
       `id, shop_id, line_user_id, display_name, created_at,
-       shops ( id, line_channel_access_token, google_review_url )`
+       shops ( id, line_channel_access_token, google_review_url, review_request_message )`
     )
     .eq('is_active', true)
     .not('line_user_id', 'is', null)
@@ -82,7 +82,7 @@ async function processReviewRequest(customer) {
     throw new Error('LINE Channel Access Token が未設定です')
   }
 
-  const message = buildReviewMessage(shop.google_review_url)
+  const message = buildReviewMessage(shop.google_review_url, shop.review_request_message)
 
   await sendLineMessage(customer.line_user_id, message, lineToken)
 
@@ -105,8 +105,13 @@ async function processReviewRequest(customer) {
 
 /**
  * 口コミ依頼メッセージ本文を生成する
+ * review_request_message が設定されている場合は {url} をGoogleレビューURLに置換して使用する
+ * 未設定の場合はデフォルト文面を使用する
  */
-function buildReviewMessage(googleReviewUrl) {
+function buildReviewMessage(googleReviewUrl, reviewRequestMessage) {
+  if (reviewRequestMessage) {
+    return reviewRequestMessage.replace('{url}', googleReviewUrl)
+  }
   return `本日はご来店ありがとうございました！\nよろしければ、Googleで口コミをいただけると嬉しいです🙏\n▼口コミはこちら\n${googleReviewUrl}`
 }
 

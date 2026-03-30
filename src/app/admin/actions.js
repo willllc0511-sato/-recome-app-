@@ -16,6 +16,8 @@ export async function updateShop(shopId, formData) {
         : formData.get('coupon_text') || formData.get('coupon_text_current') || null,
       default_notify_days: Number(formData.get('default_notify_days')) || 30,
       google_review_url: formData.get('google_review_url') || null,
+      review_request_message: formData.get('review_request_message') || null,
+      revisit_message_template: formData.get('revisit_message_template') || null,
     })
     .eq('id', shopId)
 

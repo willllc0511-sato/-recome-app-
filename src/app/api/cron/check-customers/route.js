@@ -27,7 +27,7 @@ export async function GET(request) {
     .select(
       `id, shop_id, line_user_id, display_name, memo, tags,
        last_visited_at, visit_count, notify_days_override,
-       shops ( id, name, line_channel_access_token, default_notify_days, revisit_message_interval_days, master_prompt, coupon_text )`
+       shops ( id, name, line_channel_access_token, default_notify_days, revisit_message_interval_days, master_prompt, coupon_text, revisit_message_template )`
     )
     .eq('is_active', true)
     .not('line_user_id', 'is', null)
@@ -119,14 +119,26 @@ async function processCustomer(customer) {
     throw new Error('LINE Channel Access Token が未設定です')
   }
 
-  // Claude APIでメッセージ生成
-  const message = await generateMessage(customer, shop)
+  // テンプレートが設定されていればそのまま使用、なければAI生成
+  const message = shop?.revisit_message_template
+    ? applyTemplate(shop.revisit_message_template, customer, shop)
+    : await generateMessage(customer, shop)
 
   // LINE Messaging APIで送信
   await sendLineMessage(customer.line_user_id, message, lineToken)
 
   // message_logs に保存
   await saveMessageLog(customer, message, 'sent', null)
+}
+
+/**
+ * テンプレート文字列に顧客情報を埋め込む
+ * {name}：顧客名、{coupon}：クーポン内容
+ */
+function applyTemplate(template, customer, shop) {
+  return template
+    .replace('{name}', customer.display_name ?? 'お客様')
+    .replace('{coupon}', shop?.coupon_text ?? '')
 }
 
 /**

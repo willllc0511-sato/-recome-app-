@@ -16,7 +16,7 @@ export default async function AdminPage() {
     const [shopResult, customersResult] = await Promise.all([
       supabaseAdmin
         .from('shops')
-        .select('id, name, master_prompt, coupon_text, default_notify_days, google_review_url')
+        .select('id, name, master_prompt, coupon_text, default_notify_days, google_review_url, review_request_message, revisit_message_template')
         .eq('id', SHOP_ID)
         .single(),
       supabaseAdmin
