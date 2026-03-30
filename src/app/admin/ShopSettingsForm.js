@@ -34,9 +34,8 @@ export default function ShopSettingsForm({ shop }) {
         </label>
         <textarea
           name="master_prompt"
-          defaultValue={shop.master_prompt ?? ''}
           rows={4}
-          placeholder="例：明るく親しみやすい口調で、お客様を下の名前で呼ぶ。絵文字を適度に使う。"
+          placeholder={shop.master_prompt ?? '例：明るく親しみやすい口調で、お客様を下の名前で呼ぶ。絵文字を適度に使う。'}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
         <p className="mt-1 text-xs text-gray-500">AIがこの内容をもとにオーナーらしい文体でメッセージを作成します</p>
@@ -46,9 +45,8 @@ export default function ShopSettingsForm({ shop }) {
         <label className="block text-sm font-medium text-gray-700 mb-1">クーポン内容</label>
         <textarea
           name="coupon_text"
-          defaultValue={shop.coupon_text ?? ''}
           rows={3}
-          placeholder="例：次回ご来店時、トリートメント無料サービス"
+          placeholder={shop.coupon_text ?? '例：次回ご来店時、トリートメント無料サービス'}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
         <p className="mt-1 text-xs text-gray-500">設定するとメッセージにクーポン情報を含めて送信します</p>
