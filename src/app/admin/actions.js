@@ -12,6 +12,7 @@ export async function updateShop(shopId, formData) {
       coupon_text: formData.get('coupon_text') || null,
       default_notify_days: Number(formData.get('default_notify_days')) || 30,
       google_review_url: formData.get('google_review_url') || null,
+      revisit_message_interval_days: Number(formData.get('revisit_message_interval_days')) || 20,
     })
     .eq('id', shopId)
 

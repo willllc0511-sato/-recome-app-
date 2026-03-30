@@ -27,7 +27,7 @@ export async function GET(request) {
     .select(
       `id, shop_id, line_user_id, display_name, memo, tags,
        last_visited_at, visit_count, notify_days_override,
-       shops ( id, name, line_channel_access_token, default_notify_days, master_prompt, coupon_text )`
+       shops ( id, name, line_channel_access_token, default_notify_days, revisit_message_interval_days, master_prompt, coupon_text )`
     )
     .eq('is_active', true)
     .not('line_user_id', 'is', null)
@@ -38,9 +38,9 @@ export async function GET(request) {
     return Response.json({ error: 'データベースエラー' }, { status: 500 })
   }
 
-  // 2. 通知条件を満たす顧客を絞り込む
+  // 2. 通知条件を満たす顧客を絞り込む（最終来店日からの経過日数チェック）
   const now = new Date()
-  const targets = customers.filter((customer) => {
+  const candidates = customers.filter((customer) => {
     const notifyDays =
       customer.notify_days_override ?? customer.shops?.default_notify_days ?? 30
     const lastVisited = new Date(customer.last_visited_at)
@@ -48,8 +48,41 @@ export async function GET(request) {
     return daysSince >= notifyDays
   })
 
+  // 3. 直近の送信履歴を確認し、送信間隔内の顧客は除外する
+  let targets = candidates
+  if (candidates.length > 0) {
+    const candidateIds = candidates.map((c) => c.id)
+    // 最大間隔（31日）以内の送信ログを取得
+    const lookbackDate = new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000).toISOString()
+    const { data: recentLogs } = await supabaseAdmin
+      .from('message_logs')
+      .select('customer_id, sent_at')
+      .in('customer_id', candidateIds)
+      .eq('direction', 'outbound')
+      .filter('metadata->>trigger', 'eq', 'cron/check-customers')
+      .gte('sent_at', lookbackDate)
+
+    // 顧客ごとの最終送信日時マップを作成
+    const lastSentMap = {}
+    for (const log of recentLogs ?? []) {
+      const prev = lastSentMap[log.customer_id]
+      if (!prev || new Date(log.sent_at) > new Date(prev)) {
+        lastSentMap[log.customer_id] = log.sent_at
+      }
+    }
+
+    // 送信間隔内に既送信の顧客を除外
+    targets = candidates.filter((customer) => {
+      const intervalDays = customer.shops?.revisit_message_interval_days ?? 20
+      const lastSent = lastSentMap[customer.id]
+      if (!lastSent) return true
+      const daysSinceLastSent = (now - new Date(lastSent)) / (1000 * 60 * 60 * 24)
+      return daysSinceLastSent >= intervalDays
+    })
+  }
+
   console.log(
-    `[check-customers] 通知対象: ${targets.length}/${customers.length}件`
+    `[check-customers] 通知対象: ${targets.length}/${customers.length}件（条件一致: ${candidates.length}件）`
   )
 
   // 3. 対象顧客にメッセージを送信
