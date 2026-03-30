@@ -78,16 +78,13 @@ export default function ShopSettingsForm({ shop }) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">再来店メッセージ送信間隔</label>
-        <select
+        <input
           name="revisit_message_interval_days"
+          type="number"
+          min={1}
           defaultValue={shop.revisit_message_interval_days ?? 20}
-          className="w-40 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value={10}>10日ごと</option>
-          <option value={14}>14日ごと</option>
-          <option value={20}>20日ごと</option>
-          <option value={30}>30日ごと</option>
-        </select>
+          className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
         <p className="mt-1 text-xs text-gray-500">同じ顧客への再来店メッセージをこの間隔で再送します</p>
       </div>
 
