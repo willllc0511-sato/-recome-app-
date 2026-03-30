@@ -71,9 +71,10 @@ export async function GET(request) {
       }
     }
 
-    // 送信間隔内に既送信の顧客を除外
+    // 送信間隔内に既送信の顧客を除外（default_notify_daysを間隔として使用）
     targets = candidates.filter((customer) => {
-      const intervalDays = customer.shops?.revisit_message_interval_days ?? 20
+      const intervalDays =
+        customer.notify_days_override ?? customer.shops?.default_notify_days ?? 30
       const lastSent = lastSentMap[customer.id]
       if (!lastSent) return true
       const daysSinceLastSent = (now - new Date(lastSent)) / (1000 * 60 * 60 * 24)

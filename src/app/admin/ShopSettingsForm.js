@@ -39,6 +39,7 @@ export default function ShopSettingsForm({ shop }) {
           placeholder="例：明るく親しみやすい口調で、お客様を下の名前で呼ぶ。絵文字を適度に使う。"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
+        <p className="mt-1 text-xs text-gray-500">AIがこの内容をもとにオーナーらしい文体でメッセージを作成します</p>
       </div>
 
       <div>
@@ -50,6 +51,7 @@ export default function ShopSettingsForm({ shop }) {
           placeholder="例：次回ご来店時、トリートメント無料サービス"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
+        <p className="mt-1 text-xs text-gray-500">設定するとメッセージにクーポン情報を含めて送信します</p>
       </div>
 
       <div>
@@ -61,31 +63,25 @@ export default function ShopSettingsForm({ shop }) {
           placeholder="例：https://g.page/r/xxxxxxxxxxxxxxxx/review"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <p className="mt-1 text-xs text-gray-500">設定するとLINE友だち追加から1時間後に口コミ依頼メッセージを自動送信します</p>
+        <p className="mt-1 text-xs text-gray-500">設定するとLINE友だち追加から約1時間後に口コミ依頼メッセージを1回だけ自動送信します</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">通知日数（日）</label>
-        <input
-          name="default_notify_days"
-          type="number"
-          min={1}
-          defaultValue={shop.default_notify_days ?? 30}
-          className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <p className="mt-1 text-xs text-gray-500">最終来店日からこの日数が経過した顧客に再来店メッセージを送信します</p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">再来店メッセージ送信間隔</label>
-        <input
-          name="revisit_message_interval_days"
-          type="number"
-          min={1}
-          defaultValue={shop.revisit_message_interval_days ?? 20}
-          className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <p className="mt-1 text-xs text-gray-500">同じ顧客への再来店メッセージをこの間隔で再送します</p>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          再来店メッセージを送るタイミング
+        </label>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">最終来店から</span>
+          <input
+            name="default_notify_days"
+            type="number"
+            min={1}
+            defaultValue={shop.default_notify_days ?? 30}
+            className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <span className="text-sm text-gray-600">日後</span>
+        </div>
+        <p className="mt-1 text-xs text-gray-500">最終来店日からこの日数が経過した顧客に、AIが作成した再来店メッセージを自動送信します。同じ顧客には同じ間隔で繰り返し送信されます。</p>
       </div>
 
       <div className="flex items-center gap-4 pt-2">
