@@ -57,7 +57,8 @@ export default async function AdminPage() {
 
         {/* お店設定 */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-700 mb-6">お店設定</h2>
+          <h2 className="text-xl font-bold text-gray-700 mb-1">お店設定</h2>
+          <p style={{ fontSize: '12px', color: '#999' }} className="mb-6">お店の基本情報とメッセージを設定できます</p>
           {shopError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
               <p className="font-medium">店舗データの取得に失敗しました</p>

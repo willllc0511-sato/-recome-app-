@@ -25,11 +25,10 @@ export default function ShopSettingsForm({ shop }) {
     <form onSubmit={handleSubmit} className="space-y-4" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
 
       <div>
-        <label className={labelClass}>店名</label>
+        <label className={labelClass}>店舗名</label>
         <input
           name="name"
           defaultValue={shop.name ?? ''}
-          placeholder="例：サロン花"
           className={inputClass}
         />
       </div>
@@ -41,11 +40,10 @@ export default function ShopSettingsForm({ shop }) {
       <input type="hidden" name="coupon_text_current" value={shop.coupon_text ?? ''} />
 
       <div>
-        <label className={labelClass}>クーポン内容</label>
+        <label className={labelClass}>特典・サービス内容</label>
         <input
           name="coupon_text"
           defaultValue={shop.coupon_text ?? ''}
-          placeholder="例：次回ご来店時、トリートメント無料サービス"
           className={inputClass}
         />
       </div>
@@ -58,7 +56,6 @@ export default function ShopSettingsForm({ shop }) {
           name="google_review_url"
           type="url"
           defaultValue={shop.google_review_url ?? ''}
-          placeholder="例：https://g.page/r/xxxxxxxxx"
           className={inputClass}
         />
       </div>
@@ -71,7 +68,6 @@ export default function ShopSettingsForm({ shop }) {
           name="review_request_message"
           rows={5}
           defaultValue={shop.review_request_message ?? ''}
-          placeholder={"本日はご来店ありがとうございました！\nよろしければ、Googleで口コミをいただけると嬉しいです🙏\n▼口コミはこちら\n{url}"}
           className={`${inputClass} resize-none`}
         />
       </div>
@@ -101,7 +97,6 @@ export default function ShopSettingsForm({ shop }) {
           name="revisit_message_template"
           rows={5}
           defaultValue={shop.revisit_message_template ?? ''}
-          placeholder={"{name}さん、こんにちは！\nお久しぶりです。またのご来店をお待ちしております😊\n{coupon}"}
           className={`${inputClass} resize-none`}
         />
       </div>
