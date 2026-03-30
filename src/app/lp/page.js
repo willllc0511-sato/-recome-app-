@@ -42,7 +42,7 @@ export default function LandingPage() {
             🎉 初月無料キャンペーン中
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-            LINEで<span className="text-blue-400">再来店</span>と<span className="text-green-400">口コミ</span>を<br />
+            LINEで<span className="text-blue-400">再来店</span>と<span className="text-green-400">Googleの口コミ</span>を<br />
             自動で増やす
           </h1>
           <p className="text-blue-200 mb-6">
@@ -473,30 +473,42 @@ export default function LandingPage() {
                   <td className="py-2 text-white">合同会社Will</td>
                 </tr>
                 <tr className="border-b border-blue-700/50">
-                  <td className="py-2 text-blue-300">代表</td>
-                  <td className="py-2 text-white">高城 智</td>
+                  <td className="py-2 text-blue-300">代表者</td>
+                  <td className="py-2 text-white">髙城 智</td>
                 </tr>
                 <tr className="border-b border-blue-700/50">
                   <td className="py-2 text-blue-300">所在地</td>
-                  <td className="py-2 text-white">鹿児島県鹿児島市</td>
+                  <td className="py-2 text-white">鹿児島市城山町9番2号</td>
                 </tr>
                 <tr className="border-b border-blue-700/50">
-                  <td className="py-2 text-blue-300">事業内容</td>
-                  <td className="py-2 text-white">店舗デジタル化支援、通信事業</td>
+                  <td className="py-2 text-blue-300">電話番号</td>
+                  <td className="py-2">
+                    <a href="tel:09026640511" className="text-blue-400 hover:underline">
+                      090-2664-0511
+                    </a>
+                  </td>
                 </tr>
                 <tr className="border-b border-blue-700/50">
                   <td className="py-2 text-blue-300">メール</td>
                   <td className="py-2">
-                    <a href="mailto:will.llc0511@gmail.com" className="text-blue-400 hover:underline">
-                      will.llc0511@gmail.com
+                    <a href="mailto:sa-taki@will0511.com" className="text-blue-400 hover:underline">
+                      sa-taki@will0511.com
+                    </a>
+                  </td>
+                </tr>
+                <tr className="border-b border-blue-700/50">
+                  <td className="py-2 text-blue-300">法人番号</td>
+                  <td className="py-2">
+                    <a href="https://www.houjin-bangou.nta.go.jp/henkorireki-johoto.html?selHouzinNo=1340003003411" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                      1340003003411
                     </a>
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-blue-300">電話</td>
+                  <td className="py-2 text-blue-300">ホームページ</td>
                   <td className="py-2">
-                    <a href="tel:09026640511" className="text-blue-400 hover:underline">
-                      090-2664-0511
+                    <a href="https://will0511.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                      will0511.com
                     </a>
                   </td>
                 </tr>
