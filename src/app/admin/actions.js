@@ -8,8 +8,12 @@ export async function updateShop(shopId, formData) {
     .from('shops')
     .update({
       name: formData.get('name'),
-      master_prompt: formData.get('master_prompt') || null,
-      coupon_text: formData.get('coupon_text') || null,
+      master_prompt: formData.get('master_prompt_clear') === '1'
+        ? null
+        : formData.get('master_prompt') || formData.get('master_prompt_current') || null,
+      coupon_text: formData.get('coupon_text_clear') === '1'
+        ? null
+        : formData.get('coupon_text') || formData.get('coupon_text_current') || null,
       default_notify_days: Number(formData.get('default_notify_days')) || 30,
       google_review_url: formData.get('google_review_url') || null,
     })

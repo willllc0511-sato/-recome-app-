@@ -32,23 +32,37 @@ export default function ShopSettingsForm({ shop }) {
         <label className="block text-sm font-medium text-gray-700 mb-1">
           オーナーの人柄・口調の説明
         </label>
+        <input type="hidden" name="master_prompt_current" value={shop.master_prompt ?? ''} />
         <textarea
           name="master_prompt"
           rows={4}
           placeholder={shop.master_prompt ?? '例：明るく親しみやすい口調で、お客様を下の名前で呼ぶ。絵文字を適度に使う。'}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
+        {shop.master_prompt && (
+          <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
+            <input type="checkbox" name="master_prompt_clear" value="1" className="rounded" />
+            <span className="text-xs text-red-500">現在の設定を削除する</span>
+          </label>
+        )}
         <p className="mt-1 text-xs text-gray-500">AIがこの内容をもとにオーナーらしい文体でメッセージを作成します</p>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">クーポン内容</label>
+        <input type="hidden" name="coupon_text_current" value={shop.coupon_text ?? ''} />
         <textarea
           name="coupon_text"
           rows={3}
           placeholder={shop.coupon_text ?? '例：次回ご来店時、トリートメント無料サービス'}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
+        {shop.coupon_text && (
+          <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
+            <input type="checkbox" name="coupon_text_clear" value="1" className="rounded" />
+            <span className="text-xs text-red-500">現在の設定を削除する</span>
+          </label>
+        )}
         <p className="mt-1 text-xs text-gray-500">設定するとメッセージにクーポン情報を含めて送信します</p>
       </div>
 
