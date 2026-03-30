@@ -20,7 +20,7 @@ export default function ShopSettingsForm({ shop }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="block text-lg font-medium text-gray-700 mb-2">店名</label>
+        <label className="block text-lg font-bold text-gray-700 mb-2">店名</label>
         <input
           name="name"
           defaultValue={shop.name ?? ''}
@@ -32,7 +32,7 @@ export default function ShopSettingsForm({ shop }) {
       <input type="hidden" name="master_prompt_current" value={shop.master_prompt ?? ''} />
 
       <div>
-        <label className="block text-lg font-medium text-gray-700 mb-2">クーポン内容</label>
+        <label className="block text-lg font-bold text-gray-700 mb-2">クーポン内容</label>
         <input type="hidden" name="coupon_text_current" value={shop.coupon_text ?? ''} />
         <textarea
           name="coupon_text"
@@ -50,7 +50,7 @@ export default function ShopSettingsForm({ shop }) {
       </div>
 
       <div>
-        <label className="block text-lg font-medium text-gray-700 mb-2">Googleレビューリンク</label>
+        <label className="block text-lg font-bold text-gray-700 mb-2">Googleレビューリンク</label>
         <input
           name="google_review_url"
           type="url"
@@ -62,7 +62,7 @@ export default function ShopSettingsForm({ shop }) {
       </div>
 
       <div>
-        <label className="block text-lg font-medium text-gray-700 mb-2">
+        <label className="block text-lg font-bold text-gray-700 mb-2">
           再来店メッセージを送るタイミング
         </label>
         <div className="flex items-center gap-3">

@@ -49,15 +49,15 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-2xl font-semibold text-gray-800">Link 管理画面</h1>
+      <header className="bg-blue-600 px-6 py-4">
+        <h1 className="text-2xl font-bold text-white">Link 管理画面</h1>
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-10">
 
         {/* お店設定 */}
         <section className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-xl font-medium text-gray-700 mb-6">お店設定</h2>
+          <h2 className="text-xl font-bold text-gray-700 mb-6">お店設定</h2>
           {shopError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
               <p className="font-medium">店舗データの取得に失敗しました</p>
@@ -76,7 +76,7 @@ export default async function AdminPage() {
         {/* 顧客一覧 */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-medium text-gray-700">顧客一覧</h2>
+            <h2 className="text-xl font-bold text-gray-700">顧客一覧</h2>
             {customers && (
               <span className="text-base text-gray-500">{customers.length} 件</span>
             )}
