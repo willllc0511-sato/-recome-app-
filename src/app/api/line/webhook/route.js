@@ -140,22 +140,14 @@ async function handlePostbackEvent(event) {
   const shop = customer.shops
   const lineToken = shop?.line_channel_access_token ?? CHANNEL_ACCESS_TOKEN
 
-  if (rating === 'good') {
-    // 高評価 → Googleレビューリンクを送信
+  if (rating === 'good' || rating === 'normal') {
+    // 好評価 → Googleレビューリンクを送信
     const googleUrl = shop?.google_review_url
     const message = googleUrl
       ? `ありがとうございます！\nぜひGoogleで口コミをお願いします🙏\n▼口コミはこちら\n${googleUrl}`
       : 'ありがとうございます！またのご来店をお待ちしております😊'
     await sendLineMessage(lineUserId, message, lineToken)
-    console.log('[webhook] postback: 高評価 → Googleレビューリンク送信', { lineUserId })
-  } else if (rating === 'normal') {
-    // ふつう → お礼メッセージのみ
-    await sendLineMessage(
-      lineUserId,
-      'ありがとうございます！またのご来店をお待ちしております😊',
-      lineToken
-    )
-    console.log('[webhook] postback: ふつう → お礼メッセージ送信', { lineUserId })
+    console.log('[webhook] postback: 好評価 → Googleレビューリンク送信', { lineUserId, rating })
   } else {
     // 低評価 → お礼メッセージ + 店舗オーナーへ通知
     await sendLineMessage(
