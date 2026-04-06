@@ -28,7 +28,7 @@ export async function GET(request) {
   const { data: customers, error } = await supabaseAdmin
     .from('customers')
     .select(
-      `id, shop_id, line_user_id, display_name, created_at,
+      `id, shop_id, line_user_id, display_name, created_at, review_rating,
        shops ( id, line_channel_access_token, google_review_url, review_request_message )`
     )
     .eq('is_active', true)
@@ -43,7 +43,7 @@ export async function GET(request) {
   }
 
   // google_review_url が設定されている店舗の顧客のみに絞り込む
-  const targets = customers.filter((c) => c.shops?.google_review_url)
+  const targets = customers.filter((c) => c.shops?.google_review_url && !c.review_rating)
 
   console.log(
     `[send-review-requests] 送信対象: ${targets.length}/${customers.length}件`
@@ -82,7 +82,7 @@ async function processReviewRequest(customer) {
     throw new Error('LINE Channel Access Token が未設定です')
   }
 
-  const message = buildReviewMessage(shop.google_review_url, shop.review_request_message)
+  const message = buildRatingQuestionMessage(shop.review_request_message)
 
   await sendLineMessage(customer.line_user_id, message, lineToken)
 
@@ -104,21 +104,31 @@ async function processReviewRequest(customer) {
 }
 
 /**
- * 口コミ依頼メッセージ本文を生成する
- * review_request_message が設定されている場合は {url} をGoogleレビューURLに置換して使用する
- * 未設定の場合はデフォルト文面を使用する
+ * 星評価アンケートメッセージ（Quick Reply付き）を生成する
+ * review_request_message が設定されている場合はその文面を質問テキストとして使用する
  */
-function buildReviewMessage(googleReviewUrl, reviewRequestMessage) {
-  if (reviewRequestMessage) {
-    return reviewRequestMessage.replace('{url}', googleReviewUrl)
+function buildRatingQuestionMessage(reviewRequestMessage) {
+  const questionText = reviewRequestMessage ?? '本日のご来店はいかがでしたか？'
+  return {
+    type: 'text',
+    text: questionText,
+    quickReply: {
+      items: [
+        { type: 'action', action: { type: 'postback', label: '⭐', data: 'action=review_rating&rating=1', displayText: '⭐' } },
+        { type: 'action', action: { type: 'postback', label: '⭐⭐', data: 'action=review_rating&rating=2', displayText: '⭐⭐' } },
+        { type: 'action', action: { type: 'postback', label: '⭐⭐⭐', data: 'action=review_rating&rating=3', displayText: '⭐⭐⭐' } },
+        { type: 'action', action: { type: 'postback', label: '⭐⭐⭐⭐', data: 'action=review_rating&rating=4', displayText: '⭐⭐⭐⭐' } },
+        { type: 'action', action: { type: 'postback', label: '⭐⭐⭐⭐⭐', data: 'action=review_rating&rating=5', displayText: '⭐⭐⭐⭐⭐' } },
+      ],
+    },
   }
-  return `本日はご来店ありがとうございました！\nよろしければ、Googleで口コミをいただけると嬉しいです🙏\n▼口コミはこちら\n${googleReviewUrl}`
 }
 
 /**
  * LINE Messaging API でプッシュメッセージを送信する
  */
 async function sendLineMessage(lineUserId, message, accessToken) {
+  const messageObj = typeof message === 'string' ? { type: 'text', text: message } : message
   const res = await fetch('https://api.line.me/v2/bot/message/push', {
     method: 'POST',
     headers: {
@@ -127,7 +137,7 @@ async function sendLineMessage(lineUserId, message, accessToken) {
     },
     body: JSON.stringify({
       to: lineUserId,
-      messages: [{ type: 'text', text: message }],
+      messages: [messageObj],
     }),
   })
 

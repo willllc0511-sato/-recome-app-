@@ -5,6 +5,24 @@ const CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET
 const CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN
 const SHOP_ID = process.env.NEXT_PUBLIC_SHOP_ID
 
+async function sendLineMessage(lineUserId, text, accessToken) {
+  const res = await fetch('https://api.line.me/v2/bot/message/push', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      to: lineUserId,
+      messages: [{ type: 'text', text }],
+    }),
+  })
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`LINE送信失敗: status=${res.status} body=${body}`)
+  }
+}
+
 /**
  * LINEプロフィールを取得する
  */
@@ -82,6 +100,72 @@ async function handleFollowEvent(event) {
 }
 
 /**
+ * postbackイベント（星評価回答）を処理する
+ */
+async function handlePostbackEvent(event) {
+  const lineUserId = event.source?.userId
+  if (!lineUserId) return
+
+  const params = new URLSearchParams(event.postback?.data ?? '')
+  if (params.get('action') !== 'review_rating') return
+
+  const rating = parseInt(params.get('rating'), 10)
+  if (!rating || rating < 1 || rating > 5) return
+
+  console.log('[webhook] postback: 星評価受信', { lineUserId, rating })
+
+  // 顧客と店舗情報を取得
+  const { data: customer, error } = await supabaseAdmin
+    .from('customers')
+    .select('id, shop_id, display_name, shops ( line_channel_access_token, google_review_url, owner_line_user_id )')
+    .eq('shop_id', SHOP_ID)
+    .eq('line_user_id', lineUserId)
+    .maybeSingle()
+
+  if (error || !customer) {
+    console.error('[webhook] postback: 顧客取得失敗', { lineUserId, error })
+    return
+  }
+
+  // 星評価を保存
+  const { error: updateError } = await supabaseAdmin
+    .from('customers')
+    .update({ review_rating: rating, review_rating_responded_at: new Date().toISOString() })
+    .eq('id', customer.id)
+
+  if (updateError) {
+    console.error('[webhook] postback: 星評価保存失敗', updateError)
+  }
+
+  const shop = customer.shops
+  const lineToken = shop?.line_channel_access_token ?? CHANNEL_ACCESS_TOKEN
+
+  if (rating >= 4) {
+    // 高評価 → Googleレビューリンクを送信
+    const googleUrl = shop?.google_review_url
+    const message = googleUrl
+      ? `ありがとうございます！\nぜひGoogleで口コミをお願いします🙏\n▼口コミはこちら\n${googleUrl}`
+      : 'ありがとうございます！またのご来店をお待ちしております😊'
+    await sendLineMessage(lineUserId, message, lineToken)
+    console.log('[webhook] postback: 高評価 → Googleレビューリンク送信', { lineUserId, rating })
+  } else {
+    // 低評価 → お礼メッセージ + 店舗オーナーへ通知
+    await sendLineMessage(
+      lineUserId,
+      '貴重なご意見ありがとうございます。今後の改善に活かさせていただきます。',
+      lineToken
+    )
+    if (shop?.owner_line_user_id) {
+      const name = customer.display_name ?? 'お客様'
+      const notify = `【口コミ通知】\n${name}さんから星${rating}の評価がありました。\n改善が必要な点をご確認ください。`
+      await sendLineMessage(shop.owner_line_user_id, notify, lineToken)
+        .catch((e) => console.error('[webhook] postback: オーナー通知失敗', e))
+    }
+    console.log('[webhook] postback: 低評価 → お礼メッセージ送信', { lineUserId, rating })
+  }
+}
+
+/**
  * フォロー解除（unfollow）イベントを処理する
  */
 async function handleUnfollowEvent(event) {
@@ -131,6 +215,8 @@ export async function POST(request) {
           return handleFollowEvent(event)
         case 'unfollow':
           return handleUnfollowEvent(event)
+        case 'postback':
+          return handlePostbackEvent(event)
         default:
           console.log('[webhook] 未処理イベント', { type: event.type })
           return Promise.resolve()
