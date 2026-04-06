@@ -165,7 +165,7 @@ async function handlePostbackEvent(event) {
     )
     if (shop?.owner_line_user_id) {
       const name = customer.display_name ?? 'お客様'
-      const notify = `【口コミ通知】\n${name}さんから「もう少し…」の評価がありました。\n改善が必要な点をご確認ください。`
+      const notify = `【口コミ通知】\n${name}さんから「ご意見がある」の評価がありました。\n改善が必要な点をご確認ください。`
       await sendLineMessage(shop.owner_line_user_id, notify, lineToken)
         .catch((e) => console.error('[webhook] postback: オーナー通知失敗', e))
     }
