@@ -114,11 +114,9 @@ function buildRatingQuestionMessage(reviewRequestMessage) {
     text: questionText,
     quickReply: {
       items: [
-        { type: 'action', action: { type: 'postback', label: '⭐', data: 'action=review_rating&rating=1', displayText: '⭐' } },
-        { type: 'action', action: { type: 'postback', label: '⭐⭐', data: 'action=review_rating&rating=2', displayText: '⭐⭐' } },
-        { type: 'action', action: { type: 'postback', label: '⭐⭐⭐', data: 'action=review_rating&rating=3', displayText: '⭐⭐⭐' } },
-        { type: 'action', action: { type: 'postback', label: '⭐⭐⭐⭐', data: 'action=review_rating&rating=4', displayText: '⭐⭐⭐⭐' } },
-        { type: 'action', action: { type: 'postback', label: '⭐⭐⭐⭐⭐', data: 'action=review_rating&rating=5', displayText: '⭐⭐⭐⭐⭐' } },
+        { type: 'action', action: { type: 'postback', label: '😊 とても良かった', data: 'action=review_rating&rating=good', displayText: '😊 とても良かった' } },
+        { type: 'action', action: { type: 'postback', label: '🙂 ふつう', data: 'action=review_rating&rating=normal', displayText: '🙂 ふつう' } },
+        { type: 'action', action: { type: 'postback', label: '😢 もう少し…', data: 'action=review_rating&rating=bad', displayText: '😢 もう少し…' } },
       ],
     },
   }

@@ -109,10 +109,10 @@ async function handlePostbackEvent(event) {
   const params = new URLSearchParams(event.postback?.data ?? '')
   if (params.get('action') !== 'review_rating') return
 
-  const rating = parseInt(params.get('rating'), 10)
-  if (!rating || rating < 1 || rating > 5) return
+  const rating = params.get('rating')
+  if (!['good', 'normal', 'bad'].includes(rating)) return
 
-  console.log('[webhook] postback: 星評価受信', { lineUserId, rating })
+  console.log('[webhook] postback: 評価受信', { lineUserId, rating })
 
   // 顧客と店舗情報を取得
   const { data: customer, error } = await supabaseAdmin
@@ -127,27 +127,35 @@ async function handlePostbackEvent(event) {
     return
   }
 
-  // 星評価を保存
+  // 評価を保存
   const { error: updateError } = await supabaseAdmin
     .from('customers')
     .update({ review_rating: rating, review_rating_responded_at: new Date().toISOString() })
     .eq('id', customer.id)
 
   if (updateError) {
-    console.error('[webhook] postback: 星評価保存失敗', updateError)
+    console.error('[webhook] postback: 評価保存失敗', updateError)
   }
 
   const shop = customer.shops
   const lineToken = shop?.line_channel_access_token ?? CHANNEL_ACCESS_TOKEN
 
-  if (rating >= 4) {
+  if (rating === 'good') {
     // 高評価 → Googleレビューリンクを送信
     const googleUrl = shop?.google_review_url
     const message = googleUrl
       ? `ありがとうございます！\nぜひGoogleで口コミをお願いします🙏\n▼口コミはこちら\n${googleUrl}`
       : 'ありがとうございます！またのご来店をお待ちしております😊'
     await sendLineMessage(lineUserId, message, lineToken)
-    console.log('[webhook] postback: 高評価 → Googleレビューリンク送信', { lineUserId, rating })
+    console.log('[webhook] postback: 高評価 → Googleレビューリンク送信', { lineUserId })
+  } else if (rating === 'normal') {
+    // ふつう → お礼メッセージのみ
+    await sendLineMessage(
+      lineUserId,
+      'ありがとうございます！またのご来店をお待ちしております😊',
+      lineToken
+    )
+    console.log('[webhook] postback: ふつう → お礼メッセージ送信', { lineUserId })
   } else {
     // 低評価 → お礼メッセージ + 店舗オーナーへ通知
     await sendLineMessage(
@@ -157,11 +165,11 @@ async function handlePostbackEvent(event) {
     )
     if (shop?.owner_line_user_id) {
       const name = customer.display_name ?? 'お客様'
-      const notify = `【口コミ通知】\n${name}さんから星${rating}の評価がありました。\n改善が必要な点をご確認ください。`
+      const notify = `【口コミ通知】\n${name}さんから「もう少し…」の評価がありました。\n改善が必要な点をご確認ください。`
       await sendLineMessage(shop.owner_line_user_id, notify, lineToken)
         .catch((e) => console.error('[webhook] postback: オーナー通知失敗', e))
     }
-    console.log('[webhook] postback: 低評価 → お礼メッセージ送信', { lineUserId, rating })
+    console.log('[webhook] postback: 低評価 → お礼メッセージ＋オーナー通知', { lineUserId })
   }
 }
 
