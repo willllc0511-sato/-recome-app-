@@ -108,15 +108,15 @@ async function processReviewRequest(customer) {
  * review_request_message が設定されている場合はその文面を質問テキストとして使用する
  */
 function buildRatingQuestionMessage(reviewRequestMessage) {
-  const questionText = reviewRequestMessage ?? '本日のご来店はいかがでしたか？'
+  const questionText = reviewRequestMessage ?? '先日はご来店ありがとうございました！よろしければ、今回のご来店の感想をお聞かせください😊'
   return {
     type: 'text',
     text: questionText,
     quickReply: {
       items: [
-        { type: 'action', action: { type: 'postback', label: '😊 とても良かった', data: 'action=review_rating&rating=good', displayText: '😊 とても良かった' } },
-        { type: 'action', action: { type: 'postback', label: '🙂 ふつう', data: 'action=review_rating&rating=normal', displayText: '🙂 ふつう' } },
-        { type: 'action', action: { type: 'postback', label: '😢 もう少し…', data: 'action=review_rating&rating=bad', displayText: '😢 もう少し…' } },
+        { type: 'action', action: { type: 'postback', label: '⭐ ★4〜5', data: 'action=review_rating&rating=good', displayText: '⭐ ★4〜5' } },
+        { type: 'action', action: { type: 'postback', label: '⭐ ★3', data: 'action=review_rating&rating=normal', displayText: '⭐ ★3' } },
+        { type: 'action', action: { type: 'postback', label: '⭐ ★1〜2', data: 'action=review_rating&rating=bad', displayText: '⭐ ★1〜2' } },
       ],
     },
   }
