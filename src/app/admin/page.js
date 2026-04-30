@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase'
+import { db } from '@/lib/firebase'
 import ShopSettingsForm from './ShopSettingsForm'
 
 export const revalidate = 0
@@ -13,22 +13,21 @@ export default async function AdminPage() {
   let fatalError = null
 
   try {
-    const [shopResult, customersResult] = await Promise.all([
-      supabaseAdmin
-        .from('shops')
-        .select('id, name, master_prompt, coupon_text, default_notify_days, google_review_url, review_request_message, revisit_message_template')
-        .eq('id', SHOP_ID)
-        .single(),
-      supabaseAdmin
-        .from('customers')
-        .select('id, display_name, last_visited_at, visit_count')
-        .eq('shop_id', SHOP_ID)
-        .order('last_visited_at', { ascending: false }),
+    const [shopSnap, customersSnap] = await Promise.all([
+      db.collection('shops').doc(SHOP_ID).get(),
+      db.collection('customers')
+        .where('shop_id', '==', SHOP_ID)
+        .orderBy('last_visited_at', 'desc')
+        .get(),
     ])
-    shop = shopResult.data
-    shopError = shopResult.error
-    customers = customersResult.data ?? []
-    customersError = customersResult.error
+
+    if (shopSnap.exists) {
+      shop = { id: shopSnap.id, ...shopSnap.data() }
+    } else {
+      shopError = { message: `SHOP_ID (${SHOP_ID}) に一致する店舗が見つかりません` }
+    }
+
+    customers = customersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
   } catch (e) {
     fatalError = e?.message ?? String(e)
   }
@@ -40,7 +39,7 @@ export default async function AdminPage() {
           <p className="font-semibold mb-2">管理画面の読み込みに失敗しました</p>
           <pre className="text-xs whitespace-pre-wrap font-mono">{fatalError}</pre>
           <p className="text-xs mt-3 text-red-500">
-            SHOP_ID: {SHOP_ID ?? '未設定'} / Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ?? '未設定'}
+            SHOP_ID: {SHOP_ID ?? '未設定'}
           </p>
         </div>
       </div>

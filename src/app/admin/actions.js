@@ -1,12 +1,11 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/supabase'
+import { db } from '@/lib/firebase'
 import { revalidatePath } from 'next/cache'
 
 export async function updateShop(shopId, formData) {
-  const { error } = await supabaseAdmin
-    .from('shops')
-    .update({
+  try {
+    await db.collection('shops').doc(shopId).update({
       name: formData.get('name'),
       master_prompt: formData.get('master_prompt_clear') === '1'
         ? null
@@ -19,10 +18,8 @@ export async function updateShop(shopId, formData) {
       review_request_message: formData.get('review_request_message') || null,
       revisit_message_template: formData.get('revisit_message_template') || null,
     })
-    .eq('id', shopId)
-
-  if (error) {
-    return { success: false, message: error.message }
+  } catch (e) {
+    return { success: false, message: e.message }
   }
 
   revalidatePath('/admin')

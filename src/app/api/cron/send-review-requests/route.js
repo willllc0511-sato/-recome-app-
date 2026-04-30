@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase'
+import { db } from '@/lib/firebase'
 
 const CRON_SECRET = process.env.CRON_SECRET
 
@@ -19,31 +19,46 @@ export async function GET(request) {
 
   console.log('[send-review-requests] 開始')
 
-  // 友だち追加から23〜25時間の顧客を対象にする（毎日3時UTC実行）
+  // 友だち追加から23〜25時間の顧客を対象にする
   const now = new Date()
   const from = new Date(now.getTime() - 25 * 60 * 60 * 1000).toISOString()
   const to = new Date(now.getTime() - 23 * 60 * 60 * 1000).toISOString()
 
-  // 対象顧客を取得（未送信かつ友だち追加から約1時間経過）
-  const { data: customers, error } = await supabaseAdmin
-    .from('customers')
-    .select(
-      `id, shop_id, line_user_id, display_name, created_at, review_rating,
-       shops ( id, line_channel_access_token, google_review_url, review_request_message )`
-    )
-    .eq('is_active', true)
-    .not('line_user_id', 'is', null)
-    .is('review_request_sent_at', null)
-    .gte('created_at', from)
-    .lte('created_at', to)
-
-  if (error) {
-    console.error('[send-review-requests] 顧客取得失敗', error)
+  // 対象顧客を取得（未送信かつ友だち追加から約24時間経過）
+  let customersSnap
+  try {
+    customersSnap = await db.collection('customers')
+      .where('is_active', '==', true)
+      .where('review_request_sent_at', '==', null)
+      .where('created_at', '>=', from)
+      .where('created_at', '<=', to)
+      .get()
+  } catch (e) {
+    console.error('[send-review-requests] 顧客取得失敗', e)
     return Response.json({ error: 'データベースエラー' }, { status: 500 })
   }
 
+  const customers = customersSnap.docs
+    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .filter((c) => c.line_user_id)
+
+  // 店舗情報を一括取得
+  const shopIds = [...new Set(customers.map((c) => c.shop_id))]
+  const shopMap = {}
+  for (const shopId of shopIds) {
+    const shopSnap = await db.collection('shops').doc(shopId).get()
+    if (shopSnap.exists) {
+      shopMap[shopId] = { id: shopSnap.id, ...shopSnap.data() }
+    }
+  }
+
+  const customersWithShops = customers.map((c) => ({
+    ...c,
+    shops: shopMap[c.shop_id] ?? null,
+  }))
+
   // google_review_url が設定されている店舗の顧客のみに絞り込む
-  const targets = customers.filter((c) => c.shops?.google_review_url && !c.review_rating)
+  const targets = customersWithShops.filter((c) => c.shops?.google_review_url && !c.review_rating)
 
   console.log(
     `[send-review-requests] 送信対象: ${targets.length}/${customers.length}件`
@@ -87,15 +102,14 @@ async function processReviewRequest(customer) {
   await sendLineMessage(customer.line_user_id, message, lineToken)
 
   // 送信済みフラグを更新（二重送信防止）
-  const { error } = await supabaseAdmin
-    .from('customers')
-    .update({ review_request_sent_at: new Date().toISOString() })
-    .eq('id', customer.id)
-
-  if (error) {
+  try {
+    await db.collection('customers').doc(customer.id).update({
+      review_request_sent_at: new Date().toISOString(),
+    })
+  } catch (e) {
     console.error('[send-review-requests] 送信済みフラグ更新失敗', {
       customerId: customer.id,
-      error,
+      error: e,
     })
   }
 
@@ -104,8 +118,7 @@ async function processReviewRequest(customer) {
 }
 
 /**
- * 星評価アンケートメッセージ（Quick Reply付き）を生成する
- * review_request_message が設定されている場合はその文面を質問テキストとして使用する
+ * 星評価アンケートメッセージ（Flex Message）を生成する
  */
 function buildRatingQuestionMessage(reviewRequestMessage) {
   const questionText = reviewRequestMessage ?? '先日はご来店ありがとうございました！よろしければ、今回のご来店の感想をお聞かせください😊'
@@ -182,24 +195,25 @@ async function sendLineMessage(lineUserId, message, accessToken) {
 }
 
 /**
- * message_logs テーブルに送信履歴を保存する
+ * message_logs コレクションに送信履歴を保存する
  */
 async function saveMessageLog(customer, content) {
-  const { error } = await supabaseAdmin.from('message_logs').insert({
-    shop_id: customer.shop_id,
-    customer_id: customer.id,
-    line_user_id: customer.line_user_id,
-    message_type: 'text',
-    content,
-    direction: 'outbound',
-    status: 'sent',
-    metadata: { trigger: 'cron/send-review-requests' },
-  })
-
-  if (error) {
+  try {
+    await db.collection('message_logs').add({
+      shop_id: customer.shop_id,
+      customer_id: customer.id,
+      line_user_id: customer.line_user_id,
+      message_type: 'text',
+      content,
+      direction: 'outbound',
+      status: 'sent',
+      metadata: { trigger: 'cron/send-review-requests' },
+      sent_at: new Date().toISOString(),
+    })
+  } catch (e) {
     console.error('[send-review-requests] ログ保存失敗', {
       customerId: customer.id,
-      error,
+      error: e,
     })
   }
 }

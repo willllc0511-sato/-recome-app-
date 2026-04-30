@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { supabaseAdmin } from '@/lib/supabase'
+import { db } from '@/lib/firebase'
 
 const CRON_SECRET = process.env.CRON_SECRET
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN
@@ -21,22 +21,36 @@ export async function GET(request) {
 
   console.log('[check-customers] 開始')
 
-  // 1. アクティブな顧客を店舗情報付きで取得
-  const { data: customers, error } = await supabaseAdmin
-    .from('customers')
-    .select(
-      `id, shop_id, line_user_id, display_name, memo, tags,
-       last_visited_at, visit_count, notify_days_override,
-       shops ( id, name, line_channel_access_token, default_notify_days, revisit_message_interval_days, master_prompt, coupon_text, revisit_message_template )`
-    )
-    .eq('is_active', true)
-    .not('line_user_id', 'is', null)
-    .not('last_visited_at', 'is', null)
-
-  if (error) {
-    console.error('[check-customers] 顧客取得失敗', error)
+  // 1. アクティブな顧客を取得
+  let customersSnap
+  try {
+    customersSnap = await db.collection('customers')
+      .where('is_active', '==', true)
+      .get()
+  } catch (e) {
+    console.error('[check-customers] 顧客取得失敗', e)
     return Response.json({ error: 'データベースエラー' }, { status: 500 })
   }
+
+  const allCustomers = customersSnap.docs
+    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .filter((c) => c.line_user_id && c.last_visited_at)
+
+  // 店舗情報を一括取得（重複排除）
+  const shopIds = [...new Set(allCustomers.map((c) => c.shop_id))]
+  const shopMap = {}
+  for (const shopId of shopIds) {
+    const shopSnap = await db.collection('shops').doc(shopId).get()
+    if (shopSnap.exists) {
+      shopMap[shopId] = { id: shopSnap.id, ...shopSnap.data() }
+    }
+  }
+
+  // 顧客に店舗情報を付与
+  const customers = allCustomers.map((c) => ({
+    ...c,
+    shops: shopMap[c.shop_id] ?? null,
+  }))
 
   // 2. 通知条件を満たす顧客を絞り込む（最終来店日からの経過日数チェック）
   const now = new Date()
@@ -52,26 +66,31 @@ export async function GET(request) {
   let targets = candidates
   if (candidates.length > 0) {
     const candidateIds = candidates.map((c) => c.id)
-    // 最大間隔（31日）以内の送信ログを取得
     const lookbackDate = new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000).toISOString()
-    const { data: recentLogs } = await supabaseAdmin
-      .from('message_logs')
-      .select('customer_id, sent_at')
-      .in('customer_id', candidateIds)
-      .eq('direction', 'outbound')
-      .filter('metadata->>trigger', 'eq', 'cron/check-customers')
-      .gte('sent_at', lookbackDate)
+
+    // Firestoreのinクエリは30件まで対応なのでチャンクに分割
+    const recentLogs = []
+    for (let i = 0; i < candidateIds.length; i += 30) {
+      const chunk = candidateIds.slice(i, i + 30)
+      const logsSnap = await db.collection('message_logs')
+        .where('customer_id', 'in', chunk)
+        .where('direction', '==', 'outbound')
+        .where('metadata.trigger', '==', 'cron/check-customers')
+        .where('sent_at', '>=', lookbackDate)
+        .get()
+      logsSnap.docs.forEach((doc) => recentLogs.push(doc.data()))
+    }
 
     // 顧客ごとの最終送信日時マップを作成
     const lastSentMap = {}
-    for (const log of recentLogs ?? []) {
+    for (const log of recentLogs) {
       const prev = lastSentMap[log.customer_id]
       if (!prev || new Date(log.sent_at) > new Date(prev)) {
         lastSentMap[log.customer_id] = log.sent_at
       }
     }
 
-    // 送信間隔内に既送信の顧客を除外（default_notify_daysを間隔として使用）
+    // 送信間隔内に既送信の顧客を除外
     targets = candidates.filter((customer) => {
       const intervalDays =
         customer.notify_days_override ?? customer.shops?.default_notify_days ?? 30
@@ -86,7 +105,7 @@ export async function GET(request) {
     `[check-customers] 通知対象: ${targets.length}/${customers.length}件（条件一致: ${candidates.length}件）`
   )
 
-  // 3. 対象顧客にメッセージを送信
+  // 4. 対象顧客にメッセージを送信
   const results = await Promise.allSettled(
     targets.map((customer) => processCustomer(customer))
   )
@@ -133,7 +152,6 @@ async function processCustomer(customer) {
 
 /**
  * テンプレート文字列に顧客情報を埋め込む
- * {name}：顧客名、{coupon}：クーポン内容
  */
 function applyTemplate(template, customer, shop) {
   return template
@@ -209,22 +227,23 @@ async function sendLineMessage(lineUserId, message, accessToken) {
 }
 
 /**
- * message_logs テーブルに送信履歴を保存する
+ * message_logs コレクションに送信履歴を保存する
  */
 async function saveMessageLog(customer, content, status, errorMessage) {
-  const { error } = await supabaseAdmin.from('message_logs').insert({
-    shop_id: customer.shop_id,
-    customer_id: customer.id,
-    line_user_id: customer.line_user_id,
-    message_type: 'text',
-    content,
-    direction: 'outbound',
-    status,
-    error_message: errorMessage ?? null,
-    metadata: { trigger: 'cron/check-customers' },
-  })
-
-  if (error) {
-    console.error('[check-customers] ログ保存失敗', { customerId: customer.id, error })
+  try {
+    await db.collection('message_logs').add({
+      shop_id: customer.shop_id,
+      customer_id: customer.id,
+      line_user_id: customer.line_user_id,
+      message_type: 'text',
+      content,
+      direction: 'outbound',
+      status,
+      error_message: errorMessage ?? null,
+      metadata: { trigger: 'cron/check-customers' },
+      sent_at: new Date().toISOString(),
+    })
+  } catch (e) {
+    console.error('[check-customers] ログ保存失敗', { customerId: customer.id, error: e })
   }
 }

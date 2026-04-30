@@ -1,5 +1,5 @@
 import { validateSignature } from '@line/bot-sdk'
-import { supabaseAdmin } from '@/lib/supabase'
+import { db } from '@/lib/firebase'
 
 const CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET
 const CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN
@@ -40,6 +40,20 @@ async function getLineProfile(userId) {
 }
 
 /**
+ * shop_id + line_user_id で既存顧客を検索する
+ */
+async function findCustomerByLineUserId(lineUserId) {
+  const snap = await db.collection('customers')
+    .where('shop_id', '==', SHOP_ID)
+    .where('line_user_id', '==', lineUserId)
+    .limit(1)
+    .get()
+  if (snap.empty) return null
+  const doc = snap.docs[0]
+  return { id: doc.id, ...doc.data() }
+}
+
+/**
  * 友だち追加（follow）イベントを処理する
  */
 async function handleFollowEvent(event) {
@@ -56,46 +70,45 @@ async function handleFollowEvent(event) {
   console.log('[webhook] プロフィール取得結果', { displayName: profile?.displayName ?? null })
 
   // 既存顧客チェック（重複登録防止）
-  const { data: existing, error: selectError } = await supabaseAdmin
-    .from('customers')
-    .select('id')
-    .eq('shop_id', SHOP_ID)
-    .eq('line_user_id', lineUserId)
-    .maybeSingle()
-
-  if (selectError) {
-    console.error('[webhook] 既存顧客チェック失敗', selectError)
-    return
-  }
+  const existing = await findCustomerByLineUserId(lineUserId)
 
   if (existing) {
     console.log('[webhook] 再フォロー: is_active を true に更新', { customerId: existing.id })
-    const { error: updateError } = await supabaseAdmin
-      .from('customers')
-      .update({ is_active: true, updated_at: new Date().toISOString() })
-      .eq('id', existing.id)
-    if (updateError) console.error('[webhook] 再フォロー更新失敗', updateError)
-    else console.log('[webhook] 再フォロー更新成功')
+    try {
+      await db.collection('customers').doc(existing.id).update({
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      })
+      console.log('[webhook] 再フォロー更新成功')
+    } catch (e) {
+      console.error('[webhook] 再フォロー更新失敗', e)
+    }
     return
   }
 
   // 新規顧客として登録
-  const { error: insertError } = await supabaseAdmin.from('customers').insert({
-    shop_id: SHOP_ID,
-    line_user_id: lineUserId,
-    display_name: profile?.displayName ?? null,
-    metadata: profile
-      ? {
-          picture_url: profile.pictureUrl ?? null,
-          language: profile.language ?? null,
-        }
-      : {},
-  })
-
-  if (insertError) {
-    console.error('[webhook] 新規顧客登録失敗', insertError)
-  } else {
+  try {
+    await db.collection('customers').add({
+      shop_id: SHOP_ID,
+      line_user_id: lineUserId,
+      display_name: profile?.displayName ?? null,
+      metadata: profile
+        ? {
+            picture_url: profile.pictureUrl ?? null,
+            language: profile.language ?? null,
+          }
+        : {},
+      is_active: true,
+      visit_count: 0,
+      last_visited_at: null,
+      review_request_sent_at: null,
+      review_rating: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     console.log('[webhook] 新規顧客登録成功', { lineUserId, displayName: profile?.displayName })
+  } catch (e) {
+    console.error('[webhook] 新規顧客登録失敗', e)
   }
 }
 
@@ -114,30 +127,27 @@ async function handlePostbackEvent(event) {
 
   console.log('[webhook] postback: 評価受信', { lineUserId, rating })
 
-  // 顧客と店舗情報を取得
-  const { data: customer, error } = await supabaseAdmin
-    .from('customers')
-    .select('id, shop_id, display_name, shops ( line_channel_access_token, google_review_url, owner_line_user_id )')
-    .eq('shop_id', SHOP_ID)
-    .eq('line_user_id', lineUserId)
-    .maybeSingle()
-
-  if (error || !customer) {
-    console.error('[webhook] postback: 顧客取得失敗', { lineUserId, error })
+  // 顧客情報を取得
+  const customer = await findCustomerByLineUserId(lineUserId)
+  if (!customer) {
+    console.error('[webhook] postback: 顧客取得失敗', { lineUserId })
     return
   }
 
-  // 評価を保存
-  const { error: updateError } = await supabaseAdmin
-    .from('customers')
-    .update({ review_rating: rating, review_rating_responded_at: new Date().toISOString() })
-    .eq('id', customer.id)
+  // 店舗情報を取得
+  const shopSnap = await db.collection('shops').doc(SHOP_ID).get()
+  const shop = shopSnap.exists ? shopSnap.data() : null
 
-  if (updateError) {
-    console.error('[webhook] postback: 評価保存失敗', updateError)
+  // 評価を保存
+  try {
+    await db.collection('customers').doc(customer.id).update({
+      review_rating: rating,
+      review_rating_responded_at: new Date().toISOString(),
+    })
+  } catch (e) {
+    console.error('[webhook] postback: 評価保存失敗', e)
   }
 
-  const shop = customer.shops
   const lineToken = shop?.line_channel_access_token ?? CHANNEL_ACCESS_TOKEN
 
   if (rating === 'good' || rating === 'normal') {
@@ -174,14 +184,21 @@ async function handleUnfollowEvent(event) {
 
   if (!lineUserId) return
 
-  const { error } = await supabaseAdmin
-    .from('customers')
-    .update({ is_active: false, updated_at: new Date().toISOString() })
-    .eq('shop_id', SHOP_ID)
-    .eq('line_user_id', lineUserId)
+  const customer = await findCustomerByLineUserId(lineUserId)
+  if (!customer) {
+    console.error('[webhook] unfollow: 顧客が見つかりません', { lineUserId })
+    return
+  }
 
-  if (error) console.error('[webhook] unfollow更新失敗', error)
-  else console.log('[webhook] unfollow更新成功', { lineUserId })
+  try {
+    await db.collection('customers').doc(customer.id).update({
+      is_active: false,
+      updated_at: new Date().toISOString(),
+    })
+    console.log('[webhook] unfollow更新成功', { lineUserId })
+  } catch (e) {
+    console.error('[webhook] unfollow更新失敗', e)
+  }
 }
 
 /**
