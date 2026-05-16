@@ -1,512 +1,542 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
-function LinkLogo({ size = 'md' }) {
-  const sz = size === 'sm' ? 'w-7 h-7 text-base' : 'w-10 h-10 text-xl'
+/* ─── 定数 ─── */
+const BLUE = '#4ba3d8'
+const GREEN = '#8cc63f'
+const DARK = '#333333'
+const GRAY = '#6b7280'
+const LIGHT_BG = '#e8f2fb'
+const LINE_GREEN = '#06C755'
+
+/* ─── フェードイン ─── */
+function FadeIn({ children, className = '', delay = 0 }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ob = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { el.classList.add('lp-show'); ob.unobserve(el) } },
+      { threshold: 0.08 }
+    )
+    ob.observe(el)
+    return () => ob.disconnect()
+  }, [])
   return (
-    <div className={`${sz} bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0`}>
-      <span className="text-white font-bold">L</span>
+    <div ref={ref} className={`lp-hide ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+      {children}
     </div>
   )
 }
 
+/* ─── アコーディオン ─── */
+function Accordion({ title, children, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div className="border-b border-gray-200">
+      <button className="w-full text-left py-4 flex justify-between items-center" onClick={() => setOpen(!open)}>
+        <span className="text-base font-medium text-gray-800">{title}</span>
+        <span className="text-xl flex-shrink-0 ml-4 transition-transform duration-300"
+          style={{ color: GRAY, transform: open ? 'rotate(45deg)' : 'rotate(0)' }}>+</span>
+      </button>
+      <div className="overflow-hidden transition-all duration-300"
+        style={{ maxHeight: open ? '400px' : '0', opacity: open ? 1 : 0 }}>
+        <div className="pb-4">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+/* ════════════════════════════════════════ */
 export default function LandingPage() {
-  const [openFaq, setOpenFaq] = useState(null)
-  const [openReferral, setOpenReferral] = useState(null)
-  const [formData, setFormData] = useState({ shopName: '', name: '', email: '', phone: '' })
+  const [mounted, setMounted] = useState(false)
+  const [mobileMenu, setMobileMenu] = useState(false)
+  const [form, setForm] = useState({ shopName: '', name: '', email: '', phone: '' })
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
 
-  const toggleFaq = (i) => setOpenFaq(openFaq === i ? null : i)
-  const toggleReferral = (i) => setOpenReferral(openReferral === i ? null : i)
+  useEffect(() => { setMounted(true) }, [])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    alert('お問い合わせありがとうございます。3営業日以内にご連絡します。')
+    setSending(true)
+    try {
+      await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'sa-taki@will0511.com',
+          subject: `【LP問い合わせ】${form.shopName}`,
+          body_html: `<h2>LPからの問い合わせ</h2><p><b>お店の名前:</b> ${form.shopName}</p><p><b>お名前:</b> ${form.name}</p><p><b>メール:</b> ${form.email}</p><p><b>電話番号:</b> ${form.phone || '未入力'}</p>`,
+        }),
+      })
+      setSent(true)
+    } catch {
+      alert('送信に失敗しました。LINEからお問い合わせください。')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-950 via-blue-900 to-blue-950">
+    <div className="min-h-screen bg-white" style={{ fontFamily: "'Noto Sans JP','Hiragino Sans',sans-serif" }}>
+      <style>{`
+        .lp-hide{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+        .lp-show{opacity:1;transform:translateY(0)}
+        .lp-keep{word-break:keep-all;line-break:strict;overflow-wrap:break-word}
+        .wave-bg{background:linear-gradient(160deg,#e8f2fb 0%,#ddeaf6 30%,#e2eef8 70%,#eaf2fc 100%);position:relative;overflow:hidden}
+        .wave-bg::before{content:'';position:absolute;top:0;right:-20%;width:80%;height:100%;background:radial-gradient(ellipse at 70% 50%,rgba(75,163,216,.06) 0%,transparent 70%);pointer-events:none}
+        .wave-bg::after{content:'';position:absolute;bottom:-10%;left:-20%;width:80%;height:60%;background:radial-gradient(ellipse at 30% 80%,rgba(75,163,216,.06) 0%,transparent 70%);pointer-events:none}
+        .cta-green{background:${GREEN};color:#fff;font-weight:700;border-radius:9999px;transition:transform .2s,box-shadow .2s}
+        .cta-green:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(140,198,63,.35)}
+        .cta-outline{border:2px solid #d1d5db;color:${DARK};font-weight:700;border-radius:9999px;transition:background .2s}
+        .cta-outline:hover{background:#f9fafb}
+        .cta-blue{background:${BLUE};color:#fff;font-weight:700;border-radius:9999px;transition:transform .2s,box-shadow .2s}
+        .cta-blue:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(75,163,216,.35)}
+      `}</style>
 
-      {/* ナビバー */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-blue-950/90 backdrop-blur-md border-b border-blue-800/50">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <LinkLogo />
-            <span className="text-2xl font-bold text-white">Link<span className="text-blue-400">.</span></span>
+      {/* ═══════════════════════════════════
+          HEADER（見本準拠：ロゴ左 + ハンバーガー右）
+         ═══════════════════════════════════ */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
+          <img src="/logo-full.png" alt="また来てね！" className="h-8" />
+          {/* デスクトップナビ */}
+          <div className="hidden md:flex items-center gap-7">
+            <a href="#features" className="text-sm text-gray-600 hover:text-gray-900">機能</a>
+            <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900">料金</a>
+            <a href="#faq" className="text-sm text-gray-600 hover:text-gray-900">よくある質問</a>
+            <a href="/signup" className="cta-green text-sm px-5 py-2">無料で始める</a>
           </div>
-          <a href="#contact" className="bg-blue-500 hover:bg-blue-400 text-white px-5 py-2 rounded-full text-sm font-medium transition">
-            お問い合わせ
-          </a>
+          {/* ハンバーガー */}
+          <button className="md:hidden p-2" onClick={() => setMobileMenu(!mobileMenu)} aria-label="メニュー">
+            <div className="space-y-1.5">
+              <span className="block w-6 h-0.5 bg-gray-700 transition-all" style={mobileMenu ? { transform: 'rotate(45deg) translate(4px,4px)' } : {}} />
+              <span className="block w-6 h-0.5 bg-gray-700 transition-all" style={{ opacity: mobileMenu ? 0 : 1 }} />
+              <span className="block w-6 h-0.5 bg-gray-700 transition-all" style={mobileMenu ? { transform: 'rotate(-45deg) translate(4px,-4px)' } : {}} />
+            </div>
+          </button>
         </div>
-      </nav>
-
-      {/* ヒーロー */}
-      <section className="pt-24 pb-12 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-block bg-orange-500/20 text-orange-300 px-4 py-1.5 rounded-full text-sm mb-6">
-            🎉 今なら初月無料！
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            LINEで<span className="text-blue-400">再来店</span>と<br />
-            <span className="text-green-400">Googleの口コミ</span>を<br />
-            自動で増やす
-          </h1>
-          <p className="text-blue-200 text-lg mb-8">
-            お客様がLINEを友だち追加するだけ。<br />
-            あとは全部、自動。
-          </p>
-          <a href="#contact" className="inline-block bg-blue-500 hover:bg-blue-400 text-white px-10 py-4 rounded-full text-lg font-bold transition shadow-lg shadow-blue-500/30">
-            無料で相談する
-          </a>
-        </div>
-      </section>
-
-      {/* 実績バー */}
-      <section className="py-6 px-4">
-        <div className="max-w-3xl mx-auto bg-blue-800/30 rounded-2xl p-6 grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-5xl font-bold text-white">82<span className="text-2xl">%</span></div>
-            <div className="text-blue-300 text-sm mt-1">再来店率UP</div>
-          </div>
-          <div className="text-center border-x border-blue-700">
-            <div className="text-5xl font-bold text-white">4.2<span className="text-2xl">倍</span></div>
-            <div className="text-blue-300 text-sm mt-1">口コミ増加</div>
-          </div>
-          <div className="text-center">
-            <div className="text-5xl font-bold text-white">30<span className="text-2xl">日</span></div>
-            <div className="text-blue-300 text-sm mt-1">無料お試し</div>
-          </div>
-        </div>
-      </section>
-
-      {/* お悩み */}
-      <section className="py-12 px-4">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">
-            こんなお悩みありませんか？
-          </h2>
-          <div className="space-y-4">
-            {[
-              '「口コミをお客さんに頼みづらい…」',
-              '「一度来たお客さんがなかなか戻ってこない…」',
-              '「忙しくて集客まで手が回らない…」',
-            ].map((text, i) => (
-              <div key={i} className="flex items-center gap-4 bg-blue-800/30 rounded-xl px-5 py-4 border border-blue-700/40">
-                <span className="text-blue-400 text-xl font-bold flex-shrink-0">0{i + 1}</span>
-                <p className="text-white text-base">{text}</p>
-              </div>
+        {mobileMenu && (
+          <div className="md:hidden bg-white border-t border-gray-100 px-5 py-4 space-y-3">
+            {[['機能','#features'],['料金','#pricing'],['よくある質問','#faq']].map(([l,h]) => (
+              <a key={l} href={h} className="block text-base text-gray-700" onClick={() => setMobileMenu(false)}>{l}</a>
             ))}
+            <a href="/signup" className="block text-center cta-green py-3 text-base">無料で始める</a>
           </div>
-          <p className="text-center text-blue-300 mt-6 text-base">
-            Linkがその悩みを、全部まとめて解決します。
-          </p>
-        </div>
-      </section>
+        )}
+      </header>
 
-      {/* 仕組み + モックアップ */}
-      <section className="py-12 px-4 bg-blue-900/50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-2">Linkの仕組み</h2>
-          <p className="text-blue-300 text-center text-sm mb-8">お店側の手間はゼロ。QRコードを置くだけ。</p>
+      {/* ═══════════════════════════════════
+          セクション1：ファーストビュー（hero.png準拠）
+         ═══════════════════════════════════ */}
+      <section className="wave-bg pt-20 pb-8 md:pt-28 md:pb-16 px-5">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:gap-12">
+          {/* テキストカラム */}
+          <div className="flex-1 text-center md:text-left relative z-10">
+            {/* バッジ */}
+            <div className="inline-flex items-center gap-2 bg-white/80 rounded-full px-4 py-1.5 mb-5 shadow-sm border border-gray-100">
+              <span className="font-bold text-sm" style={{ color: LINE_GREEN }}>LINE</span>
+              <span className="text-gray-300 text-xs">×</span>
+              <span className="font-bold text-sm" style={{ color: BLUE }}>Google口コミ</span>
+            </div>
 
-          {/* フロー */}
-          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-0 justify-center mb-10">
-            {[
-              { icon: '🏪', label: '来店' },
-              { icon: '📱', label: 'LINE友だち追加' },
-              { icon: '💬', label: '自動メッセージ' },
-              { icon: '⭐', label: '満足度確認' },
-              { icon: '📝', label: '口コミ依頼' },
-            ].map((step, i, arr) => (
-              <div key={i} className="flex md:flex-row flex-col items-center">
-                <div className="flex flex-col items-center">
-                  <div className="w-14 h-14 bg-blue-700/50 rounded-full flex items-center justify-center text-2xl border border-blue-500/40">
-                    {step.icon}
-                  </div>
-                  <div className="text-white text-xs mt-1.5 font-medium text-center">{step.label}</div>
+            {/* メインコピー */}
+            <h1 className="text-[26px] md:text-[44px] font-bold leading-snug mb-4 lp-keep" style={{ color: DARK }}>
+              来店後の<br className="md:hidden" />
+              <span className="relative inline-block">
+                &ldquo;ありがとう&rdquo;
+                <span className="absolute -bottom-0.5 left-0 right-0 h-1.5 rounded-full opacity-30" style={{ background: GREEN }} />
+              </span>
+              と<br />
+              口コミ<span className="font-bold" style={{ color: BLUE }}>依頼</span>を、<span style={{ color: GREEN }}>自動化</span>。
+            </h1>
+
+            {/* サブコピー */}
+            <p className="text-sm md:text-base leading-relaxed mb-6 lp-keep" style={{ color: GRAY }}>
+              お礼メッセージ、Google口コミのお願い、<br className="md:hidden" />
+              再来店メッセージまで、<br className="md:hidden" />
+              お店はただもらうだけ。かんたんに使えます。
+            </p>
+
+            {/* 料金バッジ */}
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
+              <span className="text-xs font-bold text-white px-3 py-1 rounded-full" style={{ background: GREEN }}>初月<br />無料</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-xs text-gray-500">月額</span>
+                <span className="text-[36px] md:text-[44px] font-bold" style={{ color: DARK }}>1,980</span>
+                <span className="text-sm text-gray-500">円〜</span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mb-6 -mt-3 text-center md:text-left">いつでも解約OK</p>
+
+            {/* CTA */}
+            <div className="flex flex-col gap-3 max-w-xs mx-auto md:mx-0">
+              <a href="/signup" className="cta-green flex items-center justify-center gap-2 py-3.5 text-base">
+                <span>🎁</span> 無料で始める <span>→</span>
+              </a>
+              <a href="https://lin.ee/RZSpkK3" target="_blank" rel="noopener noreferrer"
+                className="cta-outline flex items-center justify-center gap-2 py-3.5 text-base">
+                <span>💬</span> 相談してみる <span>→</span>
+              </a>
+            </div>
+          </div>
+
+          {/* スマホモック */}
+          <div className="flex-1 flex justify-center mt-10 md:mt-0 relative z-10">
+            <div className="w-[260px] md:w-[300px] bg-white rounded-[32px] shadow-2xl border-[6px] border-gray-200 overflow-hidden">
+              {/* ステータスバー */}
+              <div className="bg-white px-4 pt-2 pb-1 flex justify-between items-center">
+                <span className="text-[10px] text-gray-400">9:41</span>
+                <div className="flex gap-1">
+                  <div className="w-3 h-2 rounded-sm bg-gray-300" />
+                  <div className="w-3 h-2 rounded-sm bg-gray-300" />
+                  <div className="w-4 h-2 rounded-sm bg-gray-400" />
                 </div>
-                {i < arr.length - 1 && (
-                  <div className="text-blue-400 text-xl md:mx-2 my-1 md:my-0 rotate-90 md:rotate-0">→</div>
-                )}
               </div>
+              {/* LINEヘッダー */}
+              <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
+                <img src="/logo-icon.png" alt="" className="w-7 h-7" />
+                <span className="text-sm font-bold text-gray-800">また来てね！</span>
+              </div>
+              {/* チャット */}
+              <div className="px-3 py-3 space-y-2.5" style={{ background: '#e8f4f8', minHeight: 280 }}>
+                {/* Bot */}
+                <div className="flex gap-2 items-start">
+                  <img src="/logo-icon.png" alt="" className="w-6 h-6 rounded-full flex-shrink-0 mt-0.5" />
+                  <div className="bg-white rounded-2xl rounded-tl-sm px-3 py-2 text-[11px] text-gray-700 shadow-sm max-w-[80%] leading-relaxed">
+                    ご来店ありがとうございました！😊<br />本日のサービスはいかがでしたか？
+                  </div>
+                </div>
+                {/* User */}
+                <div className="flex justify-end">
+                  <div className="rounded-2xl rounded-tr-sm px-3 py-2 text-[11px] text-white shadow-sm" style={{ background: LINE_GREEN }}>
+                    とても良かったです！
+                  </div>
+                </div>
+                {/* Bot */}
+                <div className="flex gap-2 items-start">
+                  <img src="/logo-icon.png" alt="" className="w-6 h-6 rounded-full flex-shrink-0 mt-0.5" />
+                  <div className="bg-white rounded-2xl rounded-tl-sm px-3 py-2 text-[11px] text-gray-700 shadow-sm max-w-[80%] leading-relaxed">
+                    ありがとうございます！✨<br />よろしければGoogle口コミもお願いできますか？⭐
+                  </div>
+                </div>
+                {/* 機能カード */}
+                <div className="grid grid-cols-2 gap-1.5 mt-2">
+                  {[
+                    { icon: '💌', label: 'お礼メッセージ' },
+                    { icon: '⭐', label: 'Google口コミ依頼' },
+                    { icon: '📩', label: '不満の声キャッチ' },
+                    { icon: '🔁', label: '再来店メッセージ' },
+                  ].map((c) => (
+                    <div key={c.label} className="bg-white rounded-lg px-2 py-1.5 text-center shadow-sm">
+                      <div className="text-base">{c.icon}</div>
+                      <div className="text-[8px] text-gray-600 font-medium mt-0.5">{c.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════
+          セクション2：できること + 4機能（features.png準拠）
+         ═══════════════════════════════════ */}
+      <section id="features" className="py-14 md:py-20 px-5 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <FadeIn>
+            <h2 className="text-xl md:text-3xl font-bold text-center mb-2" style={{ color: DARK }}>
+              また来てね！で<span style={{ color: BLUE }}>できること</span>
+            </h2>
+            <p className="text-sm text-center mb-10" style={{ color: GRAY }}>
+              来店後のフォローを、自動でやさしく仕組み化。
+            </p>
+          </FadeIn>
+
+          <div className="grid grid-cols-2 gap-4 md:gap-6">
+            {[
+              { icon: '💌', title: 'お礼メッセージ\n自動配信', desc: '来店後に自動でお礼が届く', bg: '#eef7ff' },
+              { icon: '⭐', title: 'Google口コミ\n自動依頼', desc: '満足した方にだけ\n口コミをお願い', bg: '#fef9ee' },
+              { icon: '📩', title: '不満の声は\nお店へ直接', desc: '悪い口コミになる前に\nキャッチ', bg: '#f0fdf4' },
+              { icon: '🔁', title: '再来店メッセージ\n自動送信', desc: '忘れた頃にそっと\nリマインド', bg: '#fef2f2' },
+            ].map((c, i) => (
+              <FadeIn key={i} delay={i * 80}>
+                <div className="rounded-2xl p-5 md:p-6 text-center h-full shadow-sm border border-gray-100" style={{ background: c.bg }}>
+                  <div className="text-3xl md:text-4xl mb-3">{c.icon}</div>
+                  <h3 className="text-sm md:text-base font-bold mb-1 whitespace-pre-line" style={{ color: DARK }}>{c.title}</h3>
+                  <p className="text-xs md:text-sm whitespace-pre-line" style={{ color: GRAY }}>{c.desc}</p>
+                </div>
+              </FadeIn>
             ))}
           </div>
 
-          {/* 特徴グリッド + スマホモックアップ */}
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-3">
-              {[
-                { title: '満足度が高い方だけに口コミを依頼', desc: 'Google直リンク付きで自然にレビューへ誘導' },
-                { title: '低評価のお客様には改善ヒアリング', desc: '口コミは頼まず、不満を直接ヒアリング' },
-                { title: '再来店メッセージを自動送信', desc: '設定した日数後にクーポン付きで自動配信' },
-                { title: 'お店の手間はゼロ', desc: '全て自動。設定後はほったらかしでOK' },
-              ].map((item, i) => (
-                <div key={i} className="flex gap-3 bg-blue-800/20 rounded-xl p-4">
-                  <span className="text-green-400 text-xl flex-shrink-0">✅</span>
-                  <div>
-                    <div className="text-white font-medium">{item.title}</div>
-                    <div className="text-blue-300 text-sm mt-0.5">{item.desc}</div>
+          {/* かんたん4ステップ */}
+          <FadeIn>
+            <h3 className="text-lg md:text-2xl font-bold text-center mt-14 mb-8" style={{ color: DARK }}>
+              かんたん<span style={{ color: BLUE }}>4</span>ステップ
+            </h3>
+          </FadeIn>
+          <div className="space-y-5 max-w-sm mx-auto">
+            {[
+              { n: '1', icon: '📱', title: 'QRコードを置く' },
+              { n: '2', icon: '👆', title: 'お客さんが読み取る' },
+              { n: '3', icon: '✉️', title: 'お礼+口コミ依頼が届く' },
+              { n: '4', icon: '📨', title: '再来店メッセージが届く' },
+            ].map((s, i) => (
+              <FadeIn key={s.n} delay={i * 80}>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-base font-bold flex-shrink-0" style={{ background: BLUE }}>
+                    {s.n}
                   </div>
+                  <div className="text-2xl flex-shrink-0">{s.icon}</div>
+                  <span className="text-base font-medium" style={{ color: DARK }}>{s.title}</span>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="flex flex-col gap-3 max-w-xs mx-auto mt-10">
+            <a href="/signup" className="cta-blue flex items-center justify-center gap-2 py-3.5 text-base">
+              無料で始める <span>→</span>
+            </a>
+            <a href="https://lin.ee/RZSpkK3" target="_blank" rel="noopener noreferrer"
+              className="cta-outline flex items-center justify-center gap-2 py-3 text-base">
+              相談してみる <span>→</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════
+          セクション3：他社比較 / おすすめ業種 / 安心要素（difference.png準拠）
+         ═══════════════════════════════════ */}
+      <section className="wave-bg py-14 md:py-20 px-5">
+        <div className="max-w-3xl mx-auto">
+          {/* 他社との違い */}
+          <FadeIn>
+            <h2 className="text-xl md:text-3xl font-bold text-center mb-2" style={{ color: DARK }}>
+              他のサービスとの<span style={{ color: BLUE }}>違い</span>
+            </h2>
+            <p className="text-xs text-center mb-8" style={{ color: GRAY }}>
+              口コミを集めるだけでなく、次の来店につなげます。
+            </p>
+          </FadeIn>
+
+          <FadeIn delay={100}>
+            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr>
+                    <th className="py-3 px-3 text-left bg-gray-50 text-gray-500 font-medium w-[30%]" />
+                    <th className="py-3 px-2 text-center font-bold" style={{ color: GREEN }}>また来てね！</th>
+                    <th className="py-3 px-2 text-center text-gray-400 font-medium">他社</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { label: '来店後のお礼', ours: 'また来てね！', check: true, others: '自動送信' },
+                    { label: '口コミ依頼', ours: 'また来てね！', check: true, others: '自動でお願い' },
+                    { label: '再来店フォロー', ours: 'また来てね！', check: true, others: 'リマインドまで' },
+                    { label: '不満の声の受け止め', ours: 'また来てね！', check: true, others: 'お店に直接届く' },
+                  ].map((r, i) => (
+                    <tr key={i} className="border-t border-gray-100">
+                      <td className="py-3 px-3 text-gray-600 text-xs">{r.label}</td>
+                      <td className="py-3 px-2 text-center">
+                        <span className="text-xs font-bold" style={{ color: GREEN }}>✓</span>
+                      </td>
+                      <td className="py-3 px-2 text-center text-xs text-gray-400">×</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </FadeIn>
+
+          {/* おすすめ業種 */}
+          <FadeIn>
+            <h3 className="text-lg md:text-2xl font-bold text-center mt-14 mb-2" style={{ color: DARK }}>
+              こんなお店に<span style={{ color: GREEN }}>おすすめ</span>
+            </h3>
+          </FadeIn>
+          <FadeIn delay={100}>
+            <div className="grid grid-cols-4 gap-3 mt-6 max-w-sm mx-auto">
+              {[
+                { icon: '🍽️', label: '飲食店' },
+                { icon: '💇', label: '美容室' },
+                { icon: '💆', label: '整体院' },
+                { icon: '✨', label: 'サロン' },
+              ].map((b) => (
+                <div key={b.label} className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100">
+                  <div className="text-2xl mb-1">{b.icon}</div>
+                  <div className="text-xs font-medium" style={{ color: DARK }}>{b.label}</div>
                 </div>
               ))}
             </div>
+          </FadeIn>
 
-            {/* スマホモックアップ */}
-            <div className="flex justify-center">
-              <div className="relative">
-                {/* スマホフレーム */}
-                <div className="w-56 bg-gray-900 rounded-3xl p-2 shadow-2xl border border-gray-700">
-                  {/* ノッチ */}
-                  <div className="w-16 h-4 bg-gray-900 rounded-full mx-auto mb-1 relative z-10" />
-                  {/* 画面 */}
-                  <div className="bg-white rounded-2xl overflow-hidden">
-                    {/* 管理画面ヘッダー */}
-                    <div className="bg-blue-600 px-3 py-2 flex items-center gap-1.5">
-                      <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">L</span>
-                      </div>
-                      <span className="text-white text-xs font-bold">Link 管理画面</span>
-                    </div>
-                    {/* コンテンツ */}
-                    <div className="p-3 space-y-2.5">
-                      <div>
-                        <div className="text-gray-400 text-xs mb-0.5">店名</div>
-                        <div className="bg-gray-100 rounded-md px-2 py-1.5 text-gray-700 text-xs">〇〇美容室</div>
-                      </div>
-                      <div>
-                        <div className="text-gray-400 text-xs mb-0.5">Googleレビューリンク</div>
-                        <div className="bg-gray-100 rounded-md px-2 py-1.5 text-gray-400 text-xs truncate">https://g.page/r/...</div>
-                      </div>
-                      <div>
-                        <div className="text-gray-400 text-xs mb-0.5">クーポン内容</div>
-                        <div className="bg-gray-100 rounded-md px-2 py-1.5 text-gray-700 text-xs">次回10%OFF</div>
-                      </div>
-                      <div>
-                        <div className="text-gray-400 text-xs mb-0.5">再来店メッセージを送るタイミング</div>
-                        <div className="bg-gray-100 rounded-md px-2 py-1.5 text-gray-700 text-xs">最終来店から 20 日後</div>
-                      </div>
-                      <div className="bg-blue-500 text-white text-center py-1.5 rounded-lg text-xs font-bold">
-                        保存する
-                      </div>
-                    </div>
-                  </div>
-                  {/* ホームバー */}
-                  <div className="w-20 h-1 bg-gray-600 rounded-full mx-auto mt-1.5" />
+          {/* 安心要素 */}
+          <FadeIn>
+            <h3 className="text-lg md:text-2xl font-bold text-center mt-14 mb-6" style={{ color: DARK }}>
+              安心して始められます
+            </h3>
+          </FadeIn>
+          <FadeIn delay={100}>
+            <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
+              {[
+                { icon: '¥0', label: '初期費用無料', sub: '' },
+                { icon: '🔄', label: 'いつでも解約OK', sub: '' },
+                { icon: '📱', label: 'パソコン不要', sub: 'シンプル操作' },
+              ].map((a) => (
+                <div key={a.label} className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-100">
+                  <div className="text-2xl mb-1 font-bold" style={{ color: GREEN }}>{a.icon}</div>
+                  <div className="text-xs font-bold" style={{ color: DARK }}>{a.label}</div>
+                  {a.sub && <div className="text-[10px] text-gray-400 mt-0.5">{a.sub}</div>}
                 </div>
-                {/* 光沢エフェクト */}
-                <div className="absolute top-4 left-4 w-8 h-20 bg-white/5 rounded-full rotate-12 pointer-events-none" />
-              </div>
+              ))}
             </div>
+          </FadeIn>
+
+          {/* CTA */}
+          <div className="flex flex-col gap-3 max-w-xs mx-auto mt-10">
+            <a href="/signup" className="cta-green flex items-center justify-center gap-2 py-3.5 text-base">
+              🎁 無料で始める <span>→</span>
+            </a>
+            <a href="https://lin.ee/RZSpkK3" target="_blank" rel="noopener noreferrer"
+              className="cta-outline flex items-center justify-center gap-2 py-3 text-base">
+              💬 LINEで相談 <span>→</span>
+            </a>
           </div>
         </div>
       </section>
 
-      {/* お客様の声 */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">お客様の声</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { voice: '口コミが3ヶ月で12件増えて、Google検索からの新規のお客さんが明らかに増えました', who: '居酒屋オーナー A様（鹿児島市）' },
-              { voice: '設定だけお願いしたら、あとは何もしなくていいのが本当にラク。お客様が自然に口コミを書いてくれるようになりました', who: '美容室オーナー B様（霧島市）' },
-              { voice: '一度来たきりのお客さんが、LINEメッセージがきっかけでまた来てくれるようになりました', who: '整体院オーナー C様（鹿児島市）' },
-            ].map(({ voice, who }, i) => (
-              <div key={i} className="bg-blue-800/30 rounded-xl p-5 border border-blue-700/50">
-                <div className="text-yellow-400 text-lg mb-3">★★★★★</div>
-                <p className="text-white text-sm leading-relaxed mb-4">「{voice}」</p>
-                <div className="text-blue-400 text-xs">{who}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ═══════════════════════════════════
+          セクション4：料金 / FAQ / お問い合わせ（pricing.png準拠）
+         ═══════════════════════════════════ */}
 
-      {/* 料金プラン */}
-      <section id="pricing" className="py-12 px-4 bg-blue-900/50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-2">料金プラン</h2>
-          <p className="text-blue-300 text-center text-sm mb-2">シンプルな月額制。いつでも解約OK。</p>
-          <p className="text-blue-200 text-center text-sm font-medium mb-8">
-            初期費用 <span className="text-white font-bold">5万円</span>
-            <span className="text-blue-400 text-xs">（税別・1回のみ）</span>
-            　＋　月額プランを選択
-          </p>
-
-          {/* プランカード */}
-          <div className="grid md:grid-cols-3 gap-5 mb-8">
-            <div className="bg-blue-800/40 rounded-2xl p-6 border border-blue-700/50">
-              <h3 className="text-white font-bold text-lg mb-1">ベーシック</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-white">2</span>
-                <span className="text-blue-300 text-lg">万円/月</span>
-                <span className="text-blue-400 text-xs ml-1">（税別）</span>
-              </div>
-              <ul className="space-y-2 text-sm text-blue-200">
-                <li className="flex items-center gap-2"><span className="text-green-400">✓</span> 再来店メッセージ自動送信</li>
-                <li className="flex items-center gap-2"><span className="text-green-400">✓</span> 口コミ自動依頼</li>
-                <li className="flex items-center gap-2"><span className="text-green-400">✓</span> 完全自動運用</li>
-              </ul>
-            </div>
-            <div className="bg-blue-600/40 rounded-2xl p-6 border-2 border-blue-400 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs px-4 py-1 rounded-full font-bold">
-                人気No.1
-              </div>
-              <h3 className="text-white font-bold text-lg mb-1">スタンダード</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-white">5</span>
-                <span className="text-blue-300 text-lg">万円/月</span>
-                <span className="text-blue-400 text-xs ml-1">（税別）</span>
-              </div>
-              <ul className="space-y-2 text-sm text-blue-200">
-                <li className="flex items-center gap-2"><span className="text-green-400">✓</span> ベーシック全機能</li>
-                <li className="flex items-center gap-2"><span className="text-green-400">✓</span> 月次サポート</li>
-                <li className="flex items-center gap-2"><span className="text-green-400">✓</span> 相談し放題</li>
-              </ul>
-            </div>
-            <div className="bg-blue-800/40 rounded-2xl p-6 border border-blue-700/50">
-              <h3 className="text-white font-bold text-lg mb-1">プロ</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-white">7</span>
-                <span className="text-blue-300 text-lg">万円/月</span>
-                <span className="text-blue-400 text-xs ml-1">（税別）</span>
-              </div>
-              <ul className="space-y-2 text-sm text-blue-200">
-                <li className="flex items-center gap-2"><span className="text-green-400">✓</span> スタンダード全機能</li>
-                <li className="flex items-center gap-2"><span className="text-green-400">✓</span> 投稿・返信代行</li>
-                <li className="flex items-center gap-2"><span className="text-green-400">✓</span> 月次レポート</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* 初月無料 + 成果保証 */}
-          <div className="grid md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-orange-500/15 rounded-2xl p-5 border border-orange-500/30">
-              <div className="text-orange-300 text-sm mb-1">🎉 スタートダッシュキャンペーン</div>
-              <div className="text-white font-bold text-xl mb-1">今なら初月無料！</div>
-              <p className="text-blue-200 text-sm">初期費用5万円＋月額のみ。初月は月額0円でスタートできます。</p>
-            </div>
-            <div className="bg-blue-800/40 rounded-2xl p-5 border border-blue-600/40">
-              <div className="text-blue-300 text-sm mb-1">🛡️ 成果保証</div>
-              <div className="text-white font-bold text-xl mb-1">全額返金保証</div>
-              <p className="text-blue-200 text-sm">3ヶ月使って口コミが1件も増えなければ、全額返金します。</p>
-            </div>
-          </div>
-
-          {/* 紹介制度アコーディオン */}
-          <div className="space-y-3">
-            {[
-              {
-                title: '🤝 お店同士の紹介割引',
-                content: (
-                  <div>
-                    <p className="text-blue-200 text-sm mb-4">
-                      お知り合いのお店をご紹介いただくと、紹介されたお店は<strong className="text-white">初期費用1万円OFF</strong>、紹介してくださったお店は<strong className="text-white">月額から1万円値引き</strong>します。
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-blue-900/50 rounded-xl p-3 text-center">
-                        <div className="text-green-300 text-xs mb-1">紹介された方</div>
-                        <div className="text-white font-bold">初期費1万円OFF</div>
-                      </div>
-                      <div className="bg-blue-900/50 rounded-xl p-3 text-center">
-                        <div className="text-green-300 text-xs mb-1">紹介してくださった方</div>
-                        <div className="text-white font-bold">月額1万円値引き</div>
-                      </div>
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                title: '💛 紹介パートナー制度',
-                content: (
-                  <p className="text-blue-200 text-sm">
-                    店舗をお持ちでない方でも参加できます。お店をご紹介いただき、導入が決まれば<strong className="text-white">一律5,000円</strong>の報酬をお支払いします（紹介から2ヶ月目末にお支払い）。紹介コードを発行しますのでお気軽にお問い合わせください。
-                  </p>
-                ),
-              },
-            ].map((item, i) => (
-              <div key={i} className="bg-blue-800/30 rounded-xl border border-blue-700/50 overflow-hidden">
-                <button
-                  className="w-full text-left px-5 py-4 flex justify-between items-center"
-                  onClick={() => toggleReferral(i)}
-                >
-                  <span className="text-white font-medium">{item.title}</span>
-                  <span className="text-blue-400 text-xl flex-shrink-0">{openReferral === i ? '−' : '+'}</span>
-                </button>
-                {openReferral === i && (
-                  <div className="px-5 pb-5">{item.content}</div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 導入の流れ */}
-      <section className="py-12 px-4">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">最短3日で開始</h2>
-          <div className="grid grid-cols-4 gap-3 text-center">
-            {[
-              { n: '1', label: '無料相談', color: 'bg-blue-600' },
-              { n: '2', label: 'ヒアリング', color: 'bg-blue-600' },
-              { n: '3', label: '初期設定', color: 'bg-blue-600' },
-              { n: '4', label: '開始！', color: 'bg-green-500' },
-            ].map((step) => (
-              <div key={step.n}>
-                <div className={`w-12 h-12 ${step.color} rounded-full flex items-center justify-center mx-auto mb-2`}>
-                  <span className="text-white font-bold text-lg">{step.n}</span>
+      {/* 料金 */}
+      <section id="pricing" className="py-14 md:py-20 px-5 bg-white">
+        <div className="max-w-md mx-auto">
+          <FadeIn>
+            <h2 className="text-xl md:text-3xl font-bold text-center mb-8" style={{ color: DARK }}>料金</h2>
+          </FadeIn>
+          <FadeIn delay={100}>
+            <div className="flex justify-center gap-6 mb-4">
+              <div className="text-center">
+                <div className="text-xs text-gray-500 mb-1">初期費用</div>
+                <div className="flex items-baseline justify-center">
+                  <span className="text-3xl md:text-4xl font-bold" style={{ color: DARK }}>10,000</span>
+                  <span className="text-sm text-gray-500 ml-1">円</span>
                 </div>
-                <div className="text-white text-sm font-medium">{step.label}</div>
+                <div className="text-[10px] text-gray-400">（税別）</div>
               </div>
-            ))}
-          </div>
+              <div className="text-center">
+                <div className="text-xs text-gray-500 mb-1">月額</div>
+                <div className="flex items-baseline justify-center">
+                  <span className="text-3xl md:text-4xl font-bold" style={{ color: BLUE }}>1,980</span>
+                  <span className="text-sm text-gray-500 ml-1">円/月</span>
+                </div>
+                <div className="text-[10px] text-gray-400">（税別）</div>
+              </div>
+            </div>
+            <p className="text-center text-xs text-gray-400 mb-6">初月無料・いつでも解約OK</p>
+            <a href="/signup" className="cta-green flex items-center justify-center gap-2 py-3.5 text-base max-w-xs mx-auto">
+              🎁 無料で始める <span>→</span>
+            </a>
+          </FadeIn>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="py-12 px-4 bg-blue-900/50">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-6">よくある質問</h2>
-          <div className="space-y-3">
-            {[
-              { q: 'LINE公式アカウントがなくても大丈夫？', a: 'はい、ゼロから全て設定します。' },
-              { q: '本当に何もしなくていい？', a: 'QRコードを置くだけ。あとは全自動です。' },
-              { q: 'いつでも解約できる？', a: '契約の縛りなし。翌月から停止できます。' },
-              { q: '成果保証の条件は？', a: '3ヶ月で口コミが1件も増えなければ、全額返金します。' },
-            ].map((item, index) => (
-              <div key={index} className="bg-blue-800/30 rounded-xl border border-blue-700/50 overflow-hidden">
-                <button
-                  className="w-full text-left px-5 py-4 flex justify-between items-center"
-                  onClick={() => toggleFaq(index)}
-                >
-                  <span className="text-white text-base pr-4">{item.q}</span>
-                  <span className="text-blue-400 text-xl flex-shrink-0">{openFaq === index ? '−' : '+'}</span>
-                </button>
-                {openFaq === index && (
-                  <div className="px-5 pb-4">
-                    <p className="text-blue-300 text-base">{item.a}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+      <section id="faq" className="py-14 md:py-20 px-5" style={{ background: '#eef4fb' }}>
+        <div className="max-w-md mx-auto">
+          <FadeIn>
+            <h2 className="text-xl md:text-3xl font-bold text-center mb-8" style={{ color: DARK }}>よくある質問</h2>
+          </FadeIn>
+          <FadeIn delay={100}>
+            <div>
+              {[
+                { q: 'LINE公式アカウントがなくても大丈夫？', a: 'はい。開設代行オプションもあるので、ゼロから始められます。' },
+                { q: '本当に何もしなくていい？', a: 'QRコードを置くだけ。あとは全部自動です。' },
+                { q: 'いつでも解約できる？', a: 'はい。縛りなし。翌月から停止できます。' },
+                { q: '悪い口コミが増えたりしない？', a: '満足した方にだけ口コミをお願い。不満の声はお店に直接届きます。' },
+              ].map((item, i) => (
+                <Accordion key={i} title={item.q}>
+                  <p className="text-sm text-gray-600">{item.a}</p>
+                </Accordion>
+              ))}
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* お問い合わせ */}
-      <section id="contact" className="py-12 px-4">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-2">お問い合わせ</h2>
-          <p className="text-blue-300 text-center text-sm mb-8">まずは無料相談から。3営業日以内に返信します。</p>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-blue-800/30 rounded-2xl p-6 border border-blue-700/50">
-              <h3 className="text-white font-bold mb-4">📝 フォームで相談</h3>
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <input type="text" required
-                  className="w-full bg-blue-900/50 border border-blue-600/50 rounded-lg px-4 py-3 text-white text-base placeholder-blue-400/60 focus:outline-none focus:border-blue-400"
-                  placeholder="店舗名"
-                  value={formData.shopName}
-                  onChange={(e) => setFormData({...formData, shopName: e.target.value})}
-                />
-                <input type="text" required
-                  className="w-full bg-blue-900/50 border border-blue-600/50 rounded-lg px-4 py-3 text-white text-base placeholder-blue-400/60 focus:outline-none focus:border-blue-400"
-                  placeholder="お名前"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                />
-                <input type="email" required
-                  className="w-full bg-blue-900/50 border border-blue-600/50 rounded-lg px-4 py-3 text-white text-base placeholder-blue-400/60 focus:outline-none focus:border-blue-400"
-                  placeholder="メールアドレス"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                />
-                <input type="tel"
-                  className="w-full bg-blue-900/50 border border-blue-600/50 rounded-lg px-4 py-3 text-white text-base placeholder-blue-400/60 focus:outline-none focus:border-blue-400"
-                  placeholder="電話番号（任意）"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                />
-                <button type="submit"
-                  className="w-full bg-blue-500 hover:bg-blue-400 text-white py-3 rounded-xl font-bold transition text-base"
-                >
-                  送信する
+      <section id="contact" className="py-14 md:py-20 px-5 bg-white">
+        <div className="max-w-md mx-auto">
+          <FadeIn>
+            <h2 className="text-xl md:text-3xl font-bold text-center mb-8" style={{ color: DARK }}>お問い合わせ</h2>
+          </FadeIn>
+          <FadeIn delay={100}>
+            {sent ? (
+              <div className="text-center py-12">
+                <div className="text-4xl mb-4">✅</div>
+                <p className="text-lg font-bold text-gray-800 mb-2">送信しました</p>
+                <p className="text-sm text-gray-500">3営業日以内にご連絡します</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {[
+                  { k: 'shopName', t: 'text', p: 'お店の名前', r: true },
+                  { k: 'name', t: 'text', p: 'お名前', r: true },
+                  { k: 'email', t: 'email', p: 'メールアドレス', r: true },
+                  { k: 'phone', t: 'tel', p: '電話番号（任意）', r: false },
+                ].map((f) => (
+                  <div key={f.k}>
+                    <label className="text-xs text-gray-500 mb-1 block">{f.p}</label>
+                    <input type={f.t} required={f.r} placeholder={f.t === 'email' ? 'example@example.com' : f.t === 'tel' ? '090-1234-5678' : ''}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:border-transparent"
+                      style={{ '--tw-ring-color': BLUE }}
+                      value={form[f.k]}
+                      onChange={(e) => setForm({ ...form, [f.k]: e.target.value })} />
+                  </div>
+                ))}
+                <button type="submit" disabled={sending}
+                  className="cta-green w-full py-3.5 text-base disabled:opacity-50 flex items-center justify-center">
+                  {sending ? '送信中...' : '送信する'}
                 </button>
               </form>
-            </div>
-            <div className="bg-blue-800/30 rounded-2xl p-6 border border-blue-700/50 flex flex-col">
-              <h3 className="text-white font-bold mb-4">💬 LINEで相談</h3>
-              <p className="text-blue-300 text-sm mb-4">LINEでもお気軽にどうぞ！</p>
-              <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="w-36 h-36 bg-white rounded-2xl flex items-center justify-center mb-4 p-2">
-                  <img
-                    src="https://qr-official.line.me/gs/M_586adnax_GW.png"
-                    alt="LINE QRコード"
-                    className="w-full h-full object-contain"
-                  />
+            )}
+          </FadeIn>
+
+          {/* LINE相談 */}
+          <FadeIn delay={200}>
+            <div className="mt-10 pt-8 border-t border-gray-200">
+              <h3 className="text-base font-bold text-center mb-4" style={{ color: DARK }}>LINEで相談</h3>
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-36 h-36 bg-white rounded-xl flex items-center justify-center border border-gray-200 p-1">
+                  <img src="https://qr-official.line.me/gs/M_586adnax_GW.png" alt="LINE QRコード" className="w-full h-full object-contain" />
                 </div>
                 <a href="https://lin.ee/RZSpkK3" target="_blank" rel="noopener noreferrer"
-                  className="bg-green-500 hover:bg-green-400 text-white px-8 py-3 rounded-xl font-bold transition text-base"
-                >
-                  LINEで友だち追加
+                  className="flex items-center justify-center gap-2 text-white font-bold px-8 py-3 rounded-full text-base" style={{ background: LINE_GREEN }}>
+                  <span>💬</span> LINEで友だち追加
                 </a>
               </div>
             </div>
-          </div>
+          </FadeIn>
         </div>
       </section>
 
-      {/* 会社概要 */}
-      <section className="py-10 px-4 bg-blue-900/50">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-lg font-bold text-white text-center mb-4">会社概要</h2>
-          <div className="bg-blue-800/30 rounded-xl p-4 border border-blue-700/50">
-            <table className="w-full text-sm">
-              <tbody>
-                {[
-                  { label: '会社名', content: '合同会社Will' },
-                  { label: '代表者', content: '髙城 智' },
-                  { label: '所在地', content: '鹿児島市城山町9番2号' },
-                ].map(({ label, content }) => (
-                  <tr key={label} className="border-b border-blue-700/50">
-                    <td className="py-2.5 text-blue-300 w-1/3">{label}</td>
-                    <td className="py-2.5 text-white">{content}</td>
-                  </tr>
-                ))}
-                <tr className="border-b border-blue-700/50">
-                  <td className="py-2.5 text-blue-300">電話番号</td>
-                  <td className="py-2.5"><a href="tel:09026640511" className="text-blue-400 hover:underline">090-2664-0511</a></td>
-                </tr>
-                <tr className="border-b border-blue-700/50">
-                  <td className="py-2.5 text-blue-300">メール</td>
-                  <td className="py-2.5"><a href="mailto:sa-taki@will0511.com" className="text-blue-400 hover:underline">sa-taki@will0511.com</a></td>
-                </tr>
-                <tr className="border-b border-blue-700/50">
-                  <td className="py-2.5 text-blue-300">法人番号</td>
-                  <td className="py-2.5">
-                    <a href="https://www.houjin-bangou.nta.go.jp/henkorireki-johoto.html?selHouzinNo=1340003003411" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                      1340003003411
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 text-blue-300">ホームページ</td>
-                  <td className="py-2.5"><a href="https://will0511.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">will0511.com</a></td>
-                </tr>
-              </tbody>
-            </table>
+      {/* ═══════ フッター ═══════ */}
+      {mounted && (
+        <footer className="py-6 px-5 border-t border-gray-100" style={{ background: '#eef4fb' }}>
+          <div className="max-w-4xl mx-auto text-center">
+            <img src="/logo-full.png" alt="また来てね！" className="h-7 mx-auto mb-2" />
+            <p className="text-gray-400 text-[10px]">© 2026 合同会社Will</p>
           </div>
-        </div>
-      </section>
-
-      {/* フッター */}
-      <footer className="py-6 px-4 border-t border-blue-800/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <LinkLogo size="sm" />
-            <span className="text-lg font-bold text-white">Link<span className="text-blue-400">.</span></span>
-          </div>
-          <p className="text-blue-400 text-xs">© 2026 合同会社Will</p>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   )
 }

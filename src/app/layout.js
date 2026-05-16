@@ -12,14 +12,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Link",
-  description: "Link - 顧客管理・再来店促進サービス",
+  title: "また来てね！",
+  description: "また来てね！ - 一度来てくれたお客さんに、また来てもらう仕組みをつくります",
   icons: {
     icon: [
-      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+      { url: '/favicon.png', type: 'image/png' },
     ],
     apple: [
-      { url: '/icon.png', sizes: '512x512' },
+      { url: '/apple-icon.png' },
     ],
   },
 };
