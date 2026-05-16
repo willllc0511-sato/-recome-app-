@@ -1,5 +1,7 @@
 import { db } from '@/lib/firebase'
 import ShopSettingsForm from './ShopSettingsForm'
+import TutorialModal from './TutorialModal'
+import SubscriptionSection from './SubscriptionSection'
 
 export const revalidate = 0
 
@@ -48,16 +50,41 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-blue-600 px-6 py-4">
-        <h1 className="text-2xl font-bold text-white">Link 管理画面</h1>
+      <header className="bg-white px-4 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h1>
+            <img src="/logo-full.png" alt="また来てね！" style={{ height: '56px' }} />
+          </h1>
+          <TutorialModal />
+        </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-10">
+      <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+
+        {/* 説明 */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-4">
+          <p className="text-sm text-blue-800 leading-relaxed">
+            来店後のお礼メッセージ、Google口コミのお願い、再来店メッセージを設定できます。
+          </p>
+        </div>
+
+        {/* Google集客サポートへのリンク */}
+        <a href="/admin/google-attract" className="block no-underline">
+          <div className="bg-green-50 border border-green-200 rounded-xl px-5 py-5 hover:bg-green-100 transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-gray-800 mb-1">Google集客サポート</h3>
+                <p className="text-sm text-gray-600">
+                  Googleマップで見つけてもらい、来店理由を作る投稿文を作成します。
+                </p>
+              </div>
+              <span className="text-2xl">→</span>
+            </div>
+          </div>
+        </a>
 
         {/* お店設定 */}
-        <section className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-700 mb-1">お店設定</h2>
-          <p style={{ fontSize: '12px', color: '#999' }} className="mb-6">お店の基本情報とメッセージを設定できます</p>
+        <section className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           {shopError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
               <p className="font-medium">店舗データの取得に失敗しました</p>
@@ -76,9 +103,9 @@ export default async function AdminPage() {
         {/* 顧客一覧 */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-700">顧客一覧</h2>
+            <h2 className="text-xl font-bold text-gray-800">お客さん一覧</h2>
             {customers && (
-              <span className="text-base text-gray-500">{customers.length} 件</span>
+              <span className="text-base text-gray-500">{customers.length} 人</span>
             )}
           </div>
 
@@ -90,30 +117,30 @@ export default async function AdminPage() {
 
           {customers && customers.length === 0 && (
             <div className="text-center py-16 text-gray-400">
-              顧客データがありません
+              まだお客さんのデータがありません
             </div>
           )}
 
           {customers && customers.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
               <table className="w-full text-base">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-left px-6 py-4 font-medium text-gray-600">名前</th>
-                    <th className="text-left px-6 py-4 font-medium text-gray-600">最終来店日</th>
-                    <th className="text-right px-6 py-4 font-medium text-gray-600">来店回数</th>
+                    <th className="text-left px-5 py-4 font-medium text-gray-600">お名前</th>
+                    <th className="text-left px-5 py-4 font-medium text-gray-600">最後に来た日</th>
+                    <th className="text-right px-5 py-4 font-medium text-gray-600">来店回数</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {customers.map((customer) => (
                     <tr key={customer.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-5 text-gray-800">{customer.display_name ?? '—'}</td>
-                      <td className="px-6 py-5 text-gray-600">
+                      <td className="px-5 py-4 text-gray-800">{customer.display_name ?? '—'}</td>
+                      <td className="px-5 py-4 text-gray-600">
                         {customer.last_visited_at
                           ? new Date(customer.last_visited_at).toLocaleDateString('ja-JP')
                           : '—'}
                       </td>
-                      <td className="px-6 py-5 text-right text-gray-800">
+                      <td className="px-5 py-4 text-right text-gray-800">
                         {customer.visit_count ?? 0} 回
                       </td>
                     </tr>
@@ -123,6 +150,9 @@ export default async function AdminPage() {
             </div>
           )}
         </section>
+
+        {/* 契約情報・お支払い */}
+        {shop && <SubscriptionSection shopId={shop.id} />}
 
       </main>
     </div>
