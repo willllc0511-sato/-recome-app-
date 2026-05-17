@@ -2,6 +2,7 @@ import { db } from '@/lib/firebase'
 import ShopSettingsForm from './ShopSettingsForm'
 import TutorialModal from './TutorialModal'
 import SubscriptionSection from './SubscriptionSection'
+import ReviewTools from './ReviewTools'
 
 export const revalidate = 0
 
@@ -68,21 +69,6 @@ export default async function AdminPage() {
           </p>
         </div>
 
-        {/* Google集客サポートへのリンク */}
-        <a href="/admin/google-attract" className="block no-underline">
-          <div className="bg-green-50 border border-green-200 rounded-xl px-5 py-5 hover:bg-green-100 transition-colors">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-gray-800 mb-1">Google集客サポート</h3>
-                <p className="text-sm text-gray-600">
-                  Googleマップで見つけてもらい、来店理由を作る投稿文を作成します。
-                </p>
-              </div>
-              <span className="text-2xl">→</span>
-            </div>
-          </div>
-        </a>
-
         {/* お店設定 */}
         <section className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           {shopError && (
@@ -99,6 +85,9 @@ export default async function AdminPage() {
             </p>
           ) : null}
         </section>
+
+        {/* 口コミ・再来店ツール */}
+        {shop && <ReviewTools shop={shop} />}
 
         {/* 顧客一覧 */}
         <section>
