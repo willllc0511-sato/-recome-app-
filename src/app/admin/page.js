@@ -1,8 +1,5 @@
 import { db } from '@/lib/firebase'
-import ShopSettingsForm from './ShopSettingsForm'
-import TutorialModal from './TutorialModal'
-import SubscriptionSection from './SubscriptionSection'
-import ReviewTools from './ReviewTools'
+import AdminClient from './AdminClient'
 
 export const revalidate = 0
 
@@ -12,7 +9,6 @@ export default async function AdminPage() {
   let shop = null
   let shopError = null
   let customers = []
-  let customersError = null
   let fatalError = null
 
   try {
@@ -27,7 +23,7 @@ export default async function AdminPage() {
     if (shopSnap.exists) {
       shop = { id: shopSnap.id, ...shopSnap.data() }
     } else {
-      shopError = { message: `SHOP_ID (${SHOP_ID}) に一致する店舗が見つかりません` }
+      shopError = `SHOP_ID (${SHOP_ID}) に一致する店舗が見つかりません`
     }
 
     customers = customersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
@@ -49,101 +45,5 @@ export default async function AdminPage() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white px-4 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h1>
-            <img src="/logo-full.png" alt="また来てね！" style={{ height: '56px' }} />
-          </h1>
-          <TutorialModal />
-        </div>
-      </header>
-
-      <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-
-        {/* 説明 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-4">
-          <p className="text-sm text-blue-800 leading-relaxed">
-            来店後のお礼メッセージ、Google口コミのお願い、再来店メッセージを設定できます。
-          </p>
-        </div>
-
-        {/* お店設定 */}
-        <section className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-          {shopError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
-              <p className="font-medium">店舗データの取得に失敗しました</p>
-              <p className="mt-1 font-mono">{shopError.message}</p>
-            </div>
-          )}
-          {shop ? (
-            <ShopSettingsForm shop={shop} />
-          ) : !shopError ? (
-            <p className="text-sm text-red-500">
-              SHOP_ID ({SHOP_ID}) に一致する店舗が見つかりません
-            </p>
-          ) : null}
-        </section>
-
-        {/* 口コミ・再来店ツール */}
-        {shop && <ReviewTools shop={shop} />}
-
-        {/* 顧客一覧 */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800">お客さん一覧</h2>
-            {customers && (
-              <span className="text-base text-gray-500">{customers.length} 人</span>
-            )}
-          </div>
-
-          {customersError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              データの取得に失敗しました: {customersError.message}
-            </div>
-          )}
-
-          {customers && customers.length === 0 && (
-            <div className="text-center py-16 text-gray-400">
-              まだお客さんのデータがありません
-            </div>
-          )}
-
-          {customers && customers.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-              <table className="w-full text-base">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left px-5 py-4 font-medium text-gray-600">お名前</th>
-                    <th className="text-left px-5 py-4 font-medium text-gray-600">最後に来た日</th>
-                    <th className="text-right px-5 py-4 font-medium text-gray-600">来店回数</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {customers.map((customer) => (
-                    <tr key={customer.id} className="hover:bg-gray-50">
-                      <td className="px-5 py-4 text-gray-800">{customer.display_name ?? '—'}</td>
-                      <td className="px-5 py-4 text-gray-600">
-                        {customer.last_visited_at
-                          ? new Date(customer.last_visited_at).toLocaleDateString('ja-JP')
-                          : '—'}
-                      </td>
-                      <td className="px-5 py-4 text-right text-gray-800">
-                        {customer.visit_count ?? 0} 回
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        {/* 契約情報・お支払い */}
-        {shop && <SubscriptionSection shopId={shop.id} />}
-
-      </main>
-    </div>
-  )
+  return <AdminClient shop={shop} shopError={shopError} customers={customers} />
 }

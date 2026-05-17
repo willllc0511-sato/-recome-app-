@@ -12,8 +12,8 @@ const TABS = [
   { id: 'google_check', label: '今月のGoogleチェック' },
 ]
 
-export default function ReviewTools({ shop }) {
-  const [activeTab, setActiveTab] = useState('review_request')
+export default function ReviewTools({ shop, initialTab }) {
+  const [activeTab, setActiveTab] = useState(initialTab || 'review_request')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
   const [copied, setCopied] = useState(false)
@@ -74,26 +74,30 @@ export default function ReviewTools({ shop }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const currentTab = TABS.find(t => t.id === activeTab)
+
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-800">口コミ・再来店ツール</h2>
+      <h2 className="text-xl font-bold text-gray-800">{currentTab?.label || '口コミ・再来店ツール'}</h2>
 
-      {/* タブ */}
-      <div className="flex flex-wrap gap-2">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => { setActiveTab(tab.id); setResult('') }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* タブ（initialTabが指定されていない場合のみ表示） */}
+      {!initialTab && (
+        <div className="flex flex-wrap gap-2">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id); setResult('') }}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* 口コミ依頼文 */}
       {activeTab === 'review_request' && (
