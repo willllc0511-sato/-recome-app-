@@ -36,6 +36,20 @@ export default function ShopSettingsForm({ shop }) {
 
       <hr className="border-gray-200" />
 
+      <div>
+        <label className={labelClass}>お店の特徴・強み</label>
+        <textarea
+          name="shop_features"
+          rows={3}
+          defaultValue={shop.shop_features ?? ''}
+          placeholder="例：自家製麺が自慢、駅徒歩3分、キッズスペースあり、20年の実績"
+          className={`${inputClass} resize-none`}
+        />
+        <p className="text-xs text-gray-400 mt-1">口コミ依頼文や返信文の生成に使われます</p>
+      </div>
+
+      <hr className="border-gray-200" />
+
       {/* master_prompt は非表示（データは保持） */}
       <input type="hidden" name="master_prompt_current" value={shop.master_prompt ?? ''} />
       <input type="hidden" name="coupon_text_current" value={shop.coupon_text ?? ''} />

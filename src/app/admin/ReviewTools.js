@@ -40,6 +40,7 @@ export default function ReviewTools({ shop }) {
     const options = {
       shopName: shop.name || '',
       businessType,
+      shopFeatures: shop.shop_features || '',
       googleReviewUrl: shop.google_review_url || '',
       thanksMessage: '',
       reason,

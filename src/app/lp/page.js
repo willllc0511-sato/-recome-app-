@@ -533,7 +533,8 @@ export default function LandingPage() {
         <footer className="py-6 px-5 border-t border-gray-100" style={{ background: '#eef4fb' }}>
           <div className="max-w-4xl mx-auto text-center">
             <img src="/logo-full.png" alt="また来てね！" className="h-7 mx-auto mb-2" />
-            <p className="text-gray-400 text-[10px]">© 2026 合同会社Will</p>
+            <a href="/tokushoho" className="text-gray-400 text-[10px] hover:text-gray-600 underline">特定商取引法に基づく表記</a>
+            <p className="text-gray-400 text-[10px] mt-1">© 2026 合同会社Will</p>
           </div>
         </footer>
       )}

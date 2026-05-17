@@ -9,6 +9,7 @@ const PROMPTS = {
 ## 店舗情報
 - 店舗名: ${options.shopName}
 - 業種: ${options.businessType || ''}
+- お店の特徴: ${options.shopFeatures || ''}
 - Google口コミURL: ${options.googleReviewUrl || '（後で挿入）'}
 - 来店のお礼文: ${options.thanksMessage || ''}
 - 口コミを書いてほしい理由: ${options.reason || 'お店の改善に活かしたい'}
@@ -41,6 +42,7 @@ const PROMPTS = {
 ## 店舗情報
 - 店舗名: ${options.shopName}
 - 業種: ${options.businessType || ''}
+- お店の特徴: ${options.shopFeatures || ''}
 
 ## お客様の口コミ
 - 星評価: ${options.rating}つ星
@@ -66,6 +68,7 @@ const PROMPTS = {
 ## 店舗情報
 - 店舗名: ${options.shopName}
 - 業種: ${options.businessType || ''}
+- お店の特徴: ${options.shopFeatures || ''}
 - 今月: ${options.currentMonth}
 
 ## 出力ルール

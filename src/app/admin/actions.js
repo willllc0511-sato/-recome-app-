@@ -7,6 +7,7 @@ export async function updateShop(shopId, formData) {
   try {
     await db.collection('shops').doc(shopId).update({
       name: formData.get('name'),
+      shop_features: formData.get('shop_features') || null,
       master_prompt: formData.get('master_prompt_clear') === '1'
         ? null
         : formData.get('master_prompt') || formData.get('master_prompt_current') || null,
