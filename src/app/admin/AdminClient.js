@@ -1,11 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase-client'
 import AdminShell from './AdminShell'
 import ShopSettingsForm from './ShopSettingsForm'
 import ReviewTools from './ReviewTools'
 import SubscriptionSection from './SubscriptionSection'
 import TutorialContent from './TutorialContent'
+import LoginScreen from './LoginScreen'
 
 const HOME_CARDS = [
   { id: 'review_request', icon: '📝', title: '口コミ依頼文を作る', desc: '来店客に口コミを書いてもらう文面を作成' },
@@ -16,10 +19,32 @@ const HOME_CARDS = [
 
 export default function AdminClient({ shop, shopError, customers }) {
   const [currentPage, setCurrentPage] = useState('home')
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u)
+      setAuthLoading(false)
+    })
+    return unsubscribe
+  }, [])
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <LoginScreen />
+  }
 
   if (shopError) {
     return (
-      <AdminShell currentPage={currentPage} onNavigate={setCurrentPage}>
+      <AdminShell currentPage={currentPage} onNavigate={setCurrentPage} onLogout={() => signOut(auth)}>
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
           <p className="font-medium">店舗データの取得に失敗しました</p>
           <p className="mt-1 font-mono">{shopError}</p>
@@ -29,7 +54,7 @@ export default function AdminClient({ shop, shopError, customers }) {
   }
 
   return (
-    <AdminShell currentPage={currentPage} onNavigate={setCurrentPage}>
+    <AdminShell currentPage={currentPage} onNavigate={setCurrentPage} onLogout={() => signOut(auth)}>
       {/* ホーム */}
       {currentPage === 'home' && (
         <div className="space-y-5">

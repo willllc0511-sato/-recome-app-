@@ -14,7 +14,7 @@ const MENU_ITEMS = [
   { id: 'tutorial', label: '使い方', icon: '📖' },
 ]
 
-export default function AdminShell({ children, currentPage, onNavigate }) {
+export default function AdminShell({ children, currentPage, onNavigate, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -76,6 +76,17 @@ export default function AdminShell({ children, currentPage, onNavigate }) {
                   <span>{item.label}</span>
                 </button>
               ))}
+              {onLogout && (
+                <div className="border-t border-gray-200 mt-2 pt-2">
+                  <button
+                    onClick={() => { onLogout(); setMenuOpen(false) }}
+                    className="w-full text-left px-5 py-3.5 text-base flex items-center gap-3 text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <span>🚪</span>
+                    <span>ログアウト</span>
+                  </button>
+                </div>
+              )}
             </nav>
           </div>
         </div>
