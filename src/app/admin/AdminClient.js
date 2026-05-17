@@ -9,6 +9,7 @@ import ReviewTools from './ReviewTools'
 import SubscriptionSection from './SubscriptionSection'
 import TutorialContent from './TutorialContent'
 import LoginScreen from './LoginScreen'
+import WelcomeTutorial from './WelcomeTutorial'
 
 const HOME_CARDS = [
   { id: 'review_request', icon: '📝', title: '口コミ依頼文を作る', desc: '来店客に口コミを書いてもらう文面を作成' },
@@ -42,6 +43,16 @@ export default function AdminClient({ shop, shopError, customers }) {
     return <LoginScreen />
   }
 
+  const [showTutorial, setShowTutorial] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !localStorage.getItem('tutorial_done')
+  })
+
+  function closeTutorial() {
+    localStorage.setItem('tutorial_done', '1')
+    setShowTutorial(false)
+  }
+
   if (shopError) {
     return (
       <AdminShell currentPage={currentPage} onNavigate={setCurrentPage} onLogout={() => signOut(auth)}>
@@ -55,9 +66,12 @@ export default function AdminClient({ shop, shopError, customers }) {
 
   return (
     <AdminShell currentPage={currentPage} onNavigate={setCurrentPage} onLogout={() => signOut(auth)}>
+      {/* 初回チュートリアル */}
+      {showTutorial && <WelcomeTutorial onClose={closeTutorial} onNavigate={setCurrentPage} />}
+
       {/* ホーム */}
-      {currentPage === 'home' && (
-        <div className="space-y-5">
+      {currentPage === 'home' && !showTutorial && (
+        <div className="space-y-4">
           <p className="text-base font-bold text-gray-800">何をしますか？</p>
           <div className="grid grid-cols-2 gap-3">
             {HOME_CARDS.map(card => (
@@ -71,32 +85,6 @@ export default function AdminClient({ shop, shopError, customers }) {
                 <p className="text-xs text-gray-500">{card.desc}</p>
               </button>
             ))}
-          </div>
-
-          {/* 初期設定の誘導 */}
-          {shop && !shop.google_review_url && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-4">
-              <p className="text-sm font-bold text-yellow-800 mb-1">まずやること</p>
-              <p className="text-sm text-yellow-700">
-                「店舗設定」からGoogle口コミURLとメッセージを登録してください。
-              </p>
-              <button
-                onClick={() => setCurrentPage('settings')}
-                className="mt-2 text-sm text-blue-600 font-medium hover:underline"
-              >
-                → 店舗設定を開く
-              </button>
-            </div>
-          )}
-
-          {/* 使い方ガイド */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4">
-            <p className="text-sm font-bold text-gray-700 mb-2">使い方</p>
-            <ol className="text-sm text-gray-600 space-y-1.5 list-decimal list-inside">
-              <li>上のカードをタップして文章を作成</li>
-              <li>生成された文章を「コピー」</li>
-              <li>Googleビジネスプロフィールや LINEに貼り付けて使う</li>
-            </ol>
           </div>
         </div>
       )}
