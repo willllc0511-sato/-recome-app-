@@ -85,11 +85,11 @@ export default function WelcomeTutorial({ onClose, onNavigate }) {
 
           {isLast ? (
             <button
-              onClick={onClose}
+              onClick={() => { onClose(); onNavigate('settings') }}
               className="text-white text-sm font-bold px-8 py-3 rounded-xl"
               style={{ background: 'linear-gradient(135deg, #4a7dff, #3a6aee)' }}
             >
-              はじめる
+              店舗設定をはじめる
             </button>
           ) : (
             <button
