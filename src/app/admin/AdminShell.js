@@ -79,7 +79,12 @@ export default function AdminShell({ children, currentPage, onNavigate, onLogout
               {onLogout && (
                 <div className="border-t border-gray-200 mt-2 pt-2">
                   <button
-                    onClick={() => { onLogout(); setMenuOpen(false) }}
+                    onClick={() => {
+                      if (window.confirm('ログアウトしますか？')) {
+                        onLogout()
+                        setMenuOpen(false)
+                      }
+                    }}
                     className="w-full text-left px-5 py-3.5 text-base flex items-center gap-3 text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <span>🚪</span>
