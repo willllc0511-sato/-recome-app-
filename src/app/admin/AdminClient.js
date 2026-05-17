@@ -22,6 +22,10 @@ export default function AdminClient({ shop, shopError, customers }) {
   const [currentPage, setCurrentPage] = useState('home')
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
+  const [showTutorial, setShowTutorial] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !localStorage.getItem('tutorial_done')
+  })
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -30,6 +34,11 @@ export default function AdminClient({ shop, shopError, customers }) {
     })
     return unsubscribe
   }, [])
+
+  function closeTutorial() {
+    localStorage.setItem('tutorial_done', '1')
+    setShowTutorial(false)
+  }
 
   if (authLoading) {
     return (
@@ -41,16 +50,6 @@ export default function AdminClient({ shop, shopError, customers }) {
 
   if (!user) {
     return <LoginScreen />
-  }
-
-  const [showTutorial, setShowTutorial] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return !localStorage.getItem('tutorial_done')
-  })
-
-  function closeTutorial() {
-    localStorage.setItem('tutorial_done', '1')
-    setShowTutorial(false)
   }
 
   if (shopError) {
